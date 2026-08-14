@@ -15,9 +15,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend build if dist folder exists
-const distPath = join(__dirname, '../dist');
-const publicPath = join(__dirname, '../public');
+// Resolve dist and public paths using process.cwd()
+const rootDir = process.cwd();
+const distPath = join(rootDir, 'dist');
+const publicPath = join(rootDir, 'public');
+
+console.log('Serving static files from:', distPath);
 
 if (existsSync(distPath)) {
   app.use(express.static(distPath));
@@ -90,6 +93,23 @@ function getDaysRemaining(dateStr) {
 }
 
 let memoryFallback = [];
+
+// Explicit Root Handler
+app.get('/', (req, res) => {
+  const indexPath = join(distPath, 'index.html');
+  if (existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.json({
+    status: 'online',
+    app: 'UnSub REST API Backend',
+    database: db ? 'Firebase Firestore (reminder-94d10)' : 'Memory Fallback',
+    endpoints: [
+      '/api/subscriptions',
+      '/api/analytics/monthly-total'
+    ]
+  });
+});
 
 // REST ENDPOINTS
 

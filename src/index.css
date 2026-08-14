@@ -1,0 +1,81 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    background-color: #EBE6DD;
+    color: #1C1917;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Hide scrollbars for clean horizontal slider */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth button shrink animation */
+.touch-shrink:active {
+  transform: scale(0.95);
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Soft card borders & shadow */
+.card-soft-shadow {
+  box-shadow: 0 4px 16px -2px rgba(28, 25, 23, 0.05);
+}
+
+/* Clean Seamless Dynamic Island Liquid Navigation (NO Harsh White Borders) */
+.ios-crystal-liquid-glass {
+  background: rgba(226, 221, 212, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(28, 25, 23, 0.08);
+  box-shadow: 
+    0 16px 36px -6px rgba(28, 25, 23, 0.12),
+    0 4px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .ios-crystal-liquid-glass {
+  background: rgba(30, 28, 26, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 16px 36px -6px rgba(0, 0, 0, 0.5),
+    0 4px 12px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Liquid Goo Filter */
+.gooey-filter {
+  filter: url('#ultra-liquid-goo');
+}
+
+/* Splash Loader Progress Keyframes */
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+.animate-progress {
+  animation: progress 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes bounceShort {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-bounce-short {
+  animation: bounceShort 1.5s ease-in-out infinite;
+}

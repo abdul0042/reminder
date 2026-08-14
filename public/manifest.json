@@ -1,0 +1,24 @@
+{
+  "short_name": "UnSub",
+  "name": "UnSub - Subscription Tracker",
+  "description": "Track, manage, and optimize your recurring subscriptions effortlessly.",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#EBE6DD",
+  "theme_color": "#EBE6DD",
+  "display": "standalone",
+  "orientation": "portrait"
+}

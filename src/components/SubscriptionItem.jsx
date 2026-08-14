@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
+import { getLogoUrl } from '../utils/getLogoUrl';
 
 export default function SubscriptionItem({ item }) {
   const { setSelectedSub, formatPrice } = useSubscriptions();
+  const [logoError, setLogoError] = useState(false);
 
   const getCardStyle = (name, category) => {
     const n = (name || '').toLowerCase();
@@ -27,16 +29,29 @@ export default function SubscriptionItem({ item }) {
     ? new Date(item.nextBillingDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })
     : (item.planType || 'Standard');
 
+  const logoUrl = getLogoUrl(item.serviceName, item.website);
+
   return (
     <div
       onClick={() => setSelectedSub(item)}
       className="p-4 rounded-[24px] flex items-center justify-between cursor-pointer hover:opacity-95 transition-all touch-shrink shadow-soft-sm"
       style={{ backgroundColor: style.bg, color: style.text }}
     >
-      {/* Left: Brand Icon + Title + Real Date */}
+      {/* Left: Real Brand Logo + Title + Real Date */}
       <div className="flex items-center gap-3.5 min-w-0">
-        <div className="w-10 h-10 rounded-2xl bg-black text-white font-extrabold text-base flex items-center justify-center flex-shrink-0 shadow-sm">
-          {(item.serviceName || 'S').charAt(0)}
+        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#1A1918] p-2 flex items-center justify-center flex-shrink-0 shadow-sm border border-black/10 dark:border-white/10 overflow-hidden">
+          {logoUrl && !logoError ? (
+            <img
+              src={logoUrl}
+              alt={item.serviceName}
+              onError={() => setLogoError(true)}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <span className="font-extrabold text-base text-[#1C1917] dark:text-[#F5F5F3]">
+              {(item.serviceName || 'S').charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
 
         <div className="min-w-0">

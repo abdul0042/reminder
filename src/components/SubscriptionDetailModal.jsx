@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
+import { getLogoUrl } from '../utils/getLogoUrl';
 import { X, Calendar, CreditCard, Tag, Edit3, Trash2, Check } from 'lucide-react';
 
 export default function SubscriptionDetailModal() {
   const { selectedSub, setSelectedSub, updateSubscription, deleteSubscription, formatPrice } = useSubscriptions();
   const [isEditing, setIsEditing] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   const [serviceName, setServiceName] = useState('');
   const [price, setPrice] = useState('');
@@ -12,6 +14,8 @@ export default function SubscriptionDetailModal() {
   const [billingCycle, setBillingCycle] = useState('monthly');
 
   if (!selectedSub) return null;
+
+  const logoUrl = getLogoUrl(selectedSub.serviceName, selectedSub.website);
 
   const handleOpenEdit = () => {
     setServiceName(selectedSub.serviceName);
@@ -51,11 +55,23 @@ export default function SubscriptionDetailModal() {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Top Branding */}
-        <div className="flex items-center gap-3 pt-2">
-          <div className="w-12 h-12 rounded-2xl bg-black text-white font-extrabold text-xl flex items-center justify-center shadow-md">
-            {selectedSub.serviceName.charAt(0)}
+        {/* Top Branding with Real Logo */}
+        <div className="flex items-center gap-3.5 pt-2">
+          <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1A1918] p-2 flex items-center justify-center shadow-md border border-black/10 dark:border-white/10 overflow-hidden">
+            {logoUrl && !logoError ? (
+              <img
+                src={logoUrl}
+                alt={selectedSub.serviceName}
+                onError={() => setLogoError(true)}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <span className="font-extrabold text-xl text-[#1C1917] dark:text-[#F5F5F3]">
+                {selectedSub.serviceName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
+
           <div>
             <h2 className="text-xl font-extrabold tracking-tight">
               {selectedSub.serviceName}
@@ -79,7 +95,7 @@ export default function SubscriptionDetailModal() {
                 type="text"
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]"
+                className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
               />
             </div>
 
@@ -90,15 +106,16 @@ export default function SubscriptionDetailModal() {
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
                 />
               </div>
+
               <div>
                 <label className="text-xs font-bold block mb-1">Cycle</label>
                 <select
                   value={billingCycle}
                   onChange={(e) => setBillingCycle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
                 >
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
@@ -106,27 +123,17 @@ export default function SubscriptionDetailModal() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold block mb-1">Plan Tier</label>
-              <input
-                type="text"
-                value={planType}
-                onChange={(e) => setPlanType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]"
-              />
-            </div>
-
             <div className="flex gap-2 pt-2">
               <button
                 onClick={handleSaveUpdate}
-                className="flex-1 py-2.5 rounded-xl bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md"
+                className="flex-1 py-2.5 rounded-xl bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
                 <span>Save Changes</span>
               </button>
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-2.5 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] text-xs font-bold"
+                className="px-4 py-2.5 rounded-xl bg-[#C5BEB3] dark:bg-[#2F2C27] text-xs font-extrabold"
               >
                 Cancel
               </button>
@@ -134,58 +141,61 @@ export default function SubscriptionDetailModal() {
           </div>
         ) : (
           /* View Mode Details */
-          <div className="p-4 rounded-[22px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-3">
-            <div className="flex items-center justify-between py-1">
-              <span className="text-xs font-bold text-[#78746D] dark:text-[#A8A29E] flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5" /> Monthly Outflow
-              </span>
-              <span className="text-base font-extrabold">
-                {formatPrice(selectedSub.price)}
-              </span>
-            </div>
-
-            <div className="h-px bg-black/5 dark:bg-white/5" />
-
-            <div className="flex items-center justify-between py-1 text-xs">
-              <span className="font-bold text-[#78746D] dark:text-[#A8A29E] flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" /> Next Billing Date
-              </span>
-              <span className="font-extrabold">
-                {selectedSub.nextBillingDate ? new Date(selectedSub.nextBillingDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}
+          <div className="space-y-4">
+            <div className="p-4 rounded-[22px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#78746D] dark:text-[#A8A29E] block">Billing Cost</span>
+                <span className="text-2xl font-black text-[#DF4F38]">{formatPrice(selectedSub.price)}</span>
+                <span className="text-xs font-bold text-[#78746D] dark:text-[#A8A29E]"> / {selectedSub.billingCycle || 'month'}</span>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs">
+                Active Plan
               </span>
             </div>
 
-            <div className="h-px bg-black/5 dark:bg-white/5" />
+            <div className="space-y-2 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#E2DDD4]/60 dark:bg-[#24221E]/60">
+                <span className="flex items-center gap-2 text-[#78746D] dark:text-[#A8A29E]">
+                  <Calendar className="w-4 h-4 text-[#DF4F38]" /> Next Billing Date
+                </span>
+                <span>{selectedSub.nextBillingDate ? new Date(selectedSub.nextBillingDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
+              </div>
 
-            <div className="flex items-center justify-between py-1 text-xs">
-              <span className="font-bold text-[#78746D] dark:text-[#A8A29E] flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5" /> Current Plan Tier
-              </span>
-              <span className="font-extrabold">
-                {selectedSub.planType || 'Standard'}
-              </span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#E2DDD4]/60 dark:bg-[#24221E]/60">
+                <span className="flex items-center gap-2 text-[#78746D] dark:text-[#A8A29E]">
+                  <Tag className="w-4 h-4 text-[#DF4F38]" /> Plan Tier
+                </span>
+                <span>{selectedSub.planType || 'Standard'}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#E2DDD4]/60 dark:bg-[#24221E]/60">
+                <span className="flex items-center gap-2 text-[#78746D] dark:text-[#A8A29E]">
+                  <CreditCard className="w-4 h-4 text-[#DF4F38]" /> Payment Method
+                </span>
+                <span>{selectedSub.paymentMethod || '•••• 0205'}</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                onClick={handleOpenEdit}
+                className="py-3 rounded-[18px] bg-[#E2DDD4] dark:bg-[#24221E] hover:bg-[#D5CFC5] font-extrabold text-xs flex items-center justify-center gap-2 transition-all touch-shrink border border-black/5 dark:border-white/5"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Edit Details</span>
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="py-3 rounded-[18px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold text-xs flex items-center justify-center gap-2 transition-all touch-shrink border border-rose-500/20"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Cancel Plan</span>
+              </button>
             </div>
           </div>
         )}
-
-        {/* Modal Bottom Actions */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <button
-            onClick={handleOpenEdit}
-            className="py-3 rounded-[18px] bg-[#E2DDD4] dark:bg-[#24221E] hover:bg-[#D5CFC5] dark:hover:bg-[#2D2A25] font-extrabold text-xs flex items-center justify-center gap-2 border border-black/5 dark:border-white/10 transition-all touch-shrink"
-          >
-            <Edit3 className="w-4 h-4" />
-            <span>Edit Plan Details</span>
-          </button>
-
-          <button
-            onClick={handleDelete}
-            className="py-3 rounded-[18px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900/60 font-extrabold text-xs flex items-center justify-center gap-2 transition-all touch-shrink border border-rose-200 dark:border-rose-900/50"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Cancel Subscription</span>
-          </button>
-        </div>
 
       </div>
     </div>

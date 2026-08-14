@@ -1,7 +1,39 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { PRESET_SERVICES, CATEGORIES } from '../data/presets';
+import { getLogoUrl } from '../utils/getLogoUrl';
 import { Plus, Sparkles } from 'lucide-react';
+
+function PresetChip({ preset, isSelected, onSelect }) {
+  const [logoError, setLogoError] = useState(false);
+  const logoUrl = getLogoUrl(preset.name, preset.website);
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold whitespace-nowrap transition-all touch-shrink ${
+        isSelected
+          ? 'bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] border-[#1C1917] dark:border-white shadow-sm'
+          : 'bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3] border-black/5 dark:border-white/10 hover:bg-[#D5CFC5] dark:hover:bg-[#2D2A25]'
+      }`}
+    >
+      <div className="w-4 h-4 rounded-md bg-white dark:bg-black/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+        {logoUrl && !logoError ? (
+          <img
+            src={logoUrl}
+            alt={preset.name}
+            onError={() => setLogoError(true)}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className="text-[10px] font-black">{preset.name.charAt(0)}</span>
+        )}
+      </div>
+      <span>{preset.name}</span>
+    </button>
+  );
+}
 
 export default function AddSubscriptionForm({ isModal = false }) {
   const { isAddModalOpen, setIsAddModalOpen, addSubscription, setActiveTab } = useSubscriptions();
@@ -88,7 +120,7 @@ export default function AddSubscriptionForm({ isModal = false }) {
       {/* Form Card */}
       <form onSubmit={handleSubmit} className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-4">
         
-        {/* Quick Presets */}
+        {/* Quick Presets with Real Logos */}
         <div>
           <label className="text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] flex items-center gap-1 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#DF4F38]" />
@@ -96,162 +128,147 @@ export default function AddSubscriptionForm({ isModal = false }) {
           </label>
 
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 -mx-2 px-2">
-            {PRESET_SERVICES.map((preset) => {
-              const isSelected = selectedPreset === preset.name;
-              return (
-                <button
-                  key={preset.name}
-                  type="button"
-                  onClick={() => handleSelectPreset(preset)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold whitespace-nowrap transition-all touch-shrink ${
-                    isSelected
-                      ? 'bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] border-[#1C1917] dark:border-white shadow-sm'
-                      : 'bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3] border-black/5 dark:border-white/10 hover:bg-[#D5CFC5] dark:hover:bg-[#2D2A25]'
-                  }`}
-                >
-                  <span>{preset.name} (₹{preset.defaultPrice})</span>
-                </button>
-              );
-            })}
+            {PRESET_SERVICES.map((preset) => (
+              <PresetChip
+                key={preset.name}
+                preset={preset}
+                isSelected={selectedPreset === preset.name}
+                onSelect={() => handleSelectPreset(preset)}
+              />
+            ))}
           </div>
         </div>
 
-        <div className="h-px bg-black/5 dark:bg-white/5" />
-
-        {/* Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Input Fields */}
+        <div className="space-y-3">
           <div>
-            <label className="text-xs font-bold block mb-1">
-              Service Name *
-            </label>
+            <label className="text-xs font-bold block mb-1">Service Name *</label>
             <input
               type="text"
               required
+              placeholder="e.g. Spotify, Netflix, Jio, Airtel"
               value={serviceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              placeholder="e.g. Netflix, Spotify, Gym"
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] placeholder-[#78746D] dark:placeholder-[#6B655F] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
+              onChange={(e) => {
+                setServiceName(e.target.value);
+                setSelectedPreset(null);
+              }}
+              className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
             />
           </div>
 
-          <div>
-            <label className="text-xs font-bold block mb-1">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-            >
-              {CATEGORIES.filter(c => c !== 'All').map(c => (
-                <option key={c} value={c} className="bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3]">{c}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-bold block mb-1">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
+              >
+                {CATEGORIES.filter(c => c !== 'All').map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="text-xs font-bold block mb-1">
-              Price (₹ INR) *
-            </label>
-            <input
-              type="number"
-              step="1"
-              required
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="649"
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] placeholder-[#78746D] dark:placeholder-[#6B655F] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-            />
+            <div>
+              <label className="text-xs font-bold block mb-1">Billing Cycle</label>
+              <select
+                value={billingCycle}
+                onChange={(e) => setBillingCycle(e.target.value)}
+                className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
+              >
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="text-xs font-bold block mb-1">
-              Billing Cycle
-            </label>
-            <select
-              value={billingCycle}
-              onChange={(e) => setBillingCycle(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-            >
-              <option value="monthly" className="bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3]">Monthly</option>
-              <option value="yearly" className="bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3]">Yearly</option>
-            </select>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-bold block mb-1">Price (₹) *</label>
+              <input
+                type="number"
+                required
+                step="0.01"
+                placeholder="649"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold block mb-1">Next Renewal Date *</label>
+              <input
+                type="date"
+                required
+                value={nextBillingDate}
+                onChange={(e) => setNextBillingDate(e.target.value)}
+                className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs font-bold block mb-1">Plan Tier</label>
+              <input
+                type="text"
+                placeholder="Standard / 4K"
+                value={planType}
+                onChange={(e) => setPlanType(e.target.value)}
+                className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold block mb-1">Payment Method</label>
+              <input
+                type="text"
+                placeholder="UPI / Card"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold block mb-1">
-              Next Billing Date *
-            </label>
-            <input
-              type="date"
-              required
-              value={nextBillingDate}
-              onChange={(e) => setNextBillingDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs font-bold block mb-1">
-              Plan Tier
-            </label>
+            <label className="text-xs font-bold block mb-1">Notes (Optional)</label>
             <input
               type="text"
-              value={planType}
-              onChange={(e) => setPlanType(e.target.value)}
-              placeholder="e.g. Premium 4K, Family"
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] placeholder-[#78746D] dark:placeholder-[#6B655F] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-bold block mb-1">
-              Payment Info
-            </label>
-            <input
-              type="text"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              placeholder="•••• 0205"
-              className="w-full px-3.5 py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] placeholder-[#78746D] dark:placeholder-[#6B655F] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
+              placeholder="e.g. Split with roomie"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
             />
           </div>
         </div>
 
-        <div>
-          <label className="text-xs font-bold block mb-1">
-            Notes (Optional)
-          </label>
-          <textarea
-            rows={2}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. Shared plan details..."
-            className="w-full px-3.5 py-2 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-semibold text-[#1C1917] dark:text-[#F5F5F3] placeholder-[#78746D] dark:placeholder-[#6B655F] focus:outline-none focus:ring-2 focus:ring-[#DF4F38]"
-          />
-        </div>
-
-        <div className="pt-2">
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-[18px] bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] font-extrabold text-xs tracking-wide transition-all touch-shrink shadow-md"
-          >
-            Save Subscription (₹)
-          </button>
-        </div>
-
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full py-3.5 rounded-[18px] bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] font-extrabold text-xs shadow-md transition-all touch-shrink flex items-center justify-center gap-2 mt-2"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Save & Track Subscription</span>
+        </button>
       </form>
     </div>
   );
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] bg-[#EBE6DD] dark:bg-[#121212] border border-black/5 dark:border-white/10 shadow-2xl overflow-hidden max-h-[85vh] p-5 overflow-y-auto animate-in slide-in-from-bottom-8 duration-300">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="w-full max-w-md rounded-t-[32px] sm:rounded-[32px] bg-[#EBE6DD] dark:bg-[#121212] border border-black/5 dark:border-white/10 shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-300">
+          <button
+            onClick={() => setIsAddModalOpen(false)}
+            className="absolute top-5 right-5 text-[#78746D] hover:text-[#1C1917] font-extrabold text-sm"
+          >
+            ✕
+          </button>
           {formContent}
         </div>
       </div>

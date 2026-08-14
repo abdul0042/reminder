@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { CURRENCIES } from '../data/presets';
+import CustomSelect from './CustomSelect';
 import { 
   User, LogOut, Bell, Database, ShieldCheck, 
   Download, RefreshCw, Smartphone, Check, Moon, Sun, Send, BellOff 
@@ -231,43 +232,39 @@ export default function SettingsView() {
         </h3>
 
         {/* Currency Picker */}
-        <div className="flex items-center justify-between py-1">
+        <div className="flex items-center justify-between py-1 gap-4">
           <div>
             <span className="font-extrabold text-xs block">Default Currency</span>
             <span className="text-[11px] font-medium text-[#78746D] dark:text-[#A8A29E]">Primary display currency</span>
           </div>
 
-          <select
+          <CustomSelect
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="px-3 py-1.5 rounded-[14px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.symbol} {c.code}
-              </option>
-            ))}
-          </select>
+            onChange={setCurrency}
+            options={CURRENCIES.map(c => ({ value: c.code, label: `${c.symbol} ${c.code}` }))}
+            className="w-32"
+          />
         </div>
 
         <div className="h-px bg-black/5 dark:bg-white/5" />
 
         {/* Renewal Reminder Threshold */}
-        <div className="flex items-center justify-between py-1">
+        <div className="flex items-center justify-between py-1 gap-4">
           <div>
             <span className="font-extrabold text-xs block">Renewal Alert Countdown</span>
             <span className="text-[11px] font-medium text-[#78746D] dark:text-[#A8A29E]">Highlight upcoming bills</span>
           </div>
 
-          <select
+          <CustomSelect
             value={reminderDays}
-            onChange={(e) => setReminderDays(e.target.value)}
-            className="px-3 py-1.5 rounded-[14px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
-          >
-            <option value="1">1 Day Before</option>
-            <option value="3">3 Days Before</option>
-            <option value="7">7 Days Before</option>
-          </select>
+            onChange={setReminderDays}
+            options={[
+              { value: '1', label: '1 Day Before' },
+              { value: '3', label: '3 Days Before' },
+              { value: '7', label: '7 Days Before' },
+            ]}
+            className="w-36"
+          />
         </div>
       </div>
 

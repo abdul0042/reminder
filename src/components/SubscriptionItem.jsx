@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { getLogoUrl } from '../utils/getLogoUrl';
+import ServiceLogo from './ServiceLogo';
 
 export default function SubscriptionItem({ item }) {
   const { setSelectedSub, formatPrice } = useSubscriptions();
-  const [logoError, setLogoError] = useState(false);
 
   const getCardStyle = (name, category) => {
     const n = (name || '').toLowerCase();
@@ -29,8 +28,6 @@ export default function SubscriptionItem({ item }) {
     ? new Date(item.nextBillingDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })
     : (item.planType || 'Standard');
 
-  const logoUrl = getLogoUrl(item.serviceName, item.website);
-
   return (
     <div
       onClick={() => setSelectedSub(item)}
@@ -38,21 +35,7 @@ export default function SubscriptionItem({ item }) {
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       {/* Left: Real Black Brand Logo + Title + Real Date */}
-      <div className="flex items-center gap-3.5 min-w-0">
-        <div className="w-11 h-11 rounded-2xl bg-white/80 dark:bg-white/90 p-2 flex items-center justify-center flex-shrink-0 shadow-sm border border-black/10 overflow-hidden">
-          {logoUrl && !logoError ? (
-            <img
-              src={logoUrl}
-              alt={item.serviceName}
-              onError={() => setLogoError(true)}
-              className="w-full h-full object-contain grayscale contrast-200"
-            />
-          ) : (
-            <span className="font-extrabold text-base text-[#1C1917]">
-              {(item.serviceName || 'S').charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+        <ServiceLogo name={item.serviceName} website={item.website} className="w-11 h-11 rounded-2xl bg-white/90 border-black/10 shadow-xs" textClassName="text-base" />
 
         <div className="min-w-0">
           <h3 className="font-extrabold text-sm sm:text-base tracking-tight truncate">

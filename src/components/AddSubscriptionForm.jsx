@@ -4,6 +4,22 @@ import { PRESET_SERVICES, CATEGORIES } from '../data/presets';
 import { getLogoUrl } from '../utils/getLogoUrl';
 import { Plus, Sparkles } from 'lucide-react';
 import CustomSelect from './CustomSelect';
+import ServiceLogo from './ServiceLogo';
+
+// Extended list for suggestion engine (beyond presets)
+const ALL_KNOWN_SERVICES = [
+  ...PRESET_SERVICES.map(p => p.name),
+  'YouTube', 'YouTube Music', 'Hotstar', 'Jio Cinema', 'SonyLIV', 'ZEE5', 'MX Player',
+  'Audible', 'Kindle Unlimited', 'Google One', 'Google Workspace', 'Microsoft 365',
+  'Dropbox', 'Notion', 'Slack', 'Zoom', 'LinkedIn Premium', 'Grammarly',
+  'Canva Pro', 'Loom', 'Jira', 'Confluence', 'Trello', 'Asana', 'Monday.com',
+  'Airtel Xstream', 'Jio Fiber', 'Airtel Broadband', 'BSNL Broadband',
+  'PhonePe Premium', 'Swiggy One', 'Zomato Pro', 'Blinkit Pass',
+  'Duolingo Plus', 'Coursera Plus', 'Udemy', 'Skillshare', 'MasterClass',
+  'NordVPN', 'ExpressVPN', 'Surfshark', '1Password', 'LastPass', 'Bitwarden',
+  'Xbox Game Pass', 'PlayStation Plus', 'Steam', 'Epic Games',
+  'Twitch', 'Discord Nitro', 'Patreon', 'Substack',
+].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
 
 // Billing cycle options — "custom" triggers a day-count input
 const CYCLE_OPTIONS = [
@@ -14,9 +30,6 @@ const CYCLE_OPTIONS = [
 ];
 
 function PresetChip({ preset, isSelected, onSelect }) {
-  const [logoError, setLogoError] = useState(false);
-  const logoUrl = getLogoUrl(preset.name, preset.website);
-
   return (
     <button
       type="button"
@@ -27,13 +40,7 @@ function PresetChip({ preset, isSelected, onSelect }) {
           : 'bg-[#EBE6DD] dark:bg-[#1A1918] text-[#1C1917] dark:text-[#F5F5F3] border-black/5 dark:border-white/10 hover:bg-[#D5CFC5] dark:hover:bg-[#2D2A25]'
       }`}
     >
-      <div className="w-4 h-4 rounded-md bg-white dark:bg-black/20 flex items-center justify-center overflow-hidden flex-shrink-0">
-        {logoUrl && !logoError ? (
-          <img src={logoUrl} alt={preset.name} onError={() => setLogoError(true)} className="w-full h-full object-contain" />
-        ) : (
-          <span className="text-[10px] font-black">{preset.name.charAt(0)}</span>
-        )}
-      </div>
+      <ServiceLogo name={preset.name} website={preset.website} className="w-4 h-4 rounded-md border-0" textClassName="text-[9px]" />
       <span>{preset.name}</span>
     </button>
   );
@@ -52,6 +59,9 @@ export default function AddSubscriptionForm({ isModal = false }) {
   const [paymentMethod, setPaymentMethod] = useState('•••• 0205');
   const [notes, setNotes] = useState('');
   const [selectedPreset, setSelectedPreset] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
 
   // Refs for auto-focus on Enter
   const refs = {
@@ -65,6 +75,34 @@ export default function AddSubscriptionForm({ isModal = false }) {
   };
 
   const focusNext = (nextKey) => refs[nextKey]?.current?.focus();
+
+  // Suggestion engine
+  const handleServiceNameChange = (val) => {
+    setServiceName(val);
+    setSelectedPreset(null);
+    if (val.trim().length > 0) {
+      const q = val.toLowerCase();
+      const matches = ALL_KNOWN_SERVICES.filter(s => s.toLowerCase().includes(q)).slice(0, 6);
+      setSuggestions(matches);
+      setShowSuggestions(matches.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handlePickSuggestion = (name) => {
+    const preset = PRESET_SERVICES.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if (preset) {
+      handleSelectPreset(preset);
+    } else {
+      setServiceName(name);
+      setSelectedPreset(null);
+    }
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setTimeout(() => focusNext('price'), 50);
+  };
 
   const computeNextBillingDate = (start, cycle, days) => {
     if (!start) return '';
@@ -160,16 +198,46 @@ export default function AddSubscriptionForm({ isModal = false }) {
         <div className="space-y-3">
           <div>
             <label className="text-xs font-bold block mb-1">Service Name *</label>
-            <input
-              ref={refs.serviceName}
-              type="text"
-              required
-              placeholder="e.g. Spotify, Netflix, Jio, Airtel"
-              value={serviceName}
-              onChange={(e) => { setServiceName(e.target.value); setSelectedPreset(null); }}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('price'))}
-              className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
-            />
+            <div className="relative" ref={suggestionsRef}>
+              <input
+                ref={refs.serviceName}
+                type="text"
+                required
+                autoComplete="off"
+                placeholder="e.g. Spotify, Netflix, Jio, Airtel"
+                value={serviceName}
+                onChange={(e) => handleServiceNameChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); setShowSuggestions(false); focusNext('price'); }
+                  if (e.key === 'Escape') setShowSuggestions(false);
+                }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
+              />
+
+              {/* Suggestion Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-[16px] bg-white dark:bg-[#1A1918] border border-black/8 dark:border-white/10 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                  {suggestions.map((name) => {
+                    const preset = PRESET_SERVICES.find(p => p.name.toLowerCase() === name.toLowerCase());
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onMouseDown={() => handlePickSuggestion(name)}
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#EBE6DD] dark:hover:bg-[#24221E] transition-colors"
+                      >
+                        <ServiceLogo name={name} website={preset?.website} className="w-6 h-6 rounded-lg" />
+                        <div className="min-w-0">
+                          <span className="text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] block truncate">{name}</span>
+                          {preset && <span className="text-[10px] font-semibold text-[#78746D] dark:text-[#A8A29E]">₹{preset.defaultPrice}/{preset.category}</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">

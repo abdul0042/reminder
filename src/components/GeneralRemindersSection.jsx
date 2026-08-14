@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { Bell, Plus, CheckCircle2, Circle, Trash2, X, Clock } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 
 export default function GeneralRemindersSection() {
   const { 
@@ -146,18 +147,18 @@ export default function GeneralRemindersSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs font-bold block mb-1">Remind In (Minutes)</label>
-                  <select
+                  <CustomSelect
                     value={minutes}
-                    onChange={(e) => setMinutes(e.target.value)}
-                    className="w-full px-3 py-3 rounded-[16px] bg-white dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-extrabold focus:outline-none cursor-pointer"
-                  >
-                    <option value="0">Immediately (Now)</option>
-                    <option value="5">In 5 Minutes</option>
-                    <option value="15">In 15 Minutes</option>
-                    <option value="30">In 30 Minutes</option>
-                    <option value="60">In 1 Hour</option>
-                    <option value="1440">Tomorrow (24 Hours)</option>
-                  </select>
+                    onChange={setMinutes}
+                    options={[
+                      { value: '0', label: 'Immediately (Now)' },
+                      { value: '5', label: 'In 5 Minutes' },
+                      { value: '15', label: 'In 15 Minutes' },
+                      { value: '30', label: 'In 30 Minutes' },
+                      { value: '60', label: 'In 1 Hour' },
+                      { value: '1440', label: 'Tomorrow (24 Hours)' },
+                    ]}
+                  />
                 </div>
 
                 <div>

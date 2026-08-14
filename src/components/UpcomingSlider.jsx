@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { getLogoUrl } from '../utils/getLogoUrl';
+import ServiceLogo from './ServiceLogo';
 
 function UpcomingCard({ item }) {
   const { setSelectedSub, formatPrice } = useSubscriptions();
-  const [logoError, setLogoError] = useState(false);
-  const logoUrl = getLogoUrl(item.serviceName, item.website);
 
   return (
     <div
@@ -14,20 +12,7 @@ function UpcomingCard({ item }) {
     >
       {/* Top Row: Real Black Brand Logo & Price */}
       <div className="flex items-center justify-between">
-        <div className="w-7 h-7 rounded-xl bg-white/90 dark:bg-white/90 p-1 flex items-center justify-center font-black text-xs shadow-sm border border-black/10 overflow-hidden flex-shrink-0">
-          {logoUrl && !logoError ? (
-            <img
-              src={logoUrl}
-              alt={item.serviceName}
-              onError={() => setLogoError(true)}
-              className="w-full h-full object-contain grayscale contrast-200"
-            />
-          ) : (
-            <span className="font-extrabold text-xs text-[#1C1917]">
-              {(item.serviceName || 'S').charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+        <ServiceLogo name={item.serviceName} website={item.website} className="w-7 h-7 rounded-xl bg-white/90 border border-black/10 shadow-xs" textClassName="text-xs" />
         <span className="font-extrabold text-sm truncate ml-1">
           {formatPrice(item.price)}
         </span>

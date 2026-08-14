@@ -1,64 +1,62 @@
-// Sleek monochrome black brand logo URLs for popular subscription services
-const BRAND_LOGOS = {
-  spotify: 'https://cdn.simpleicons.org/spotify/1C1917',
-  netflix: 'https://cdn.simpleicons.org/netflix/1C1917',
-  youtube: 'https://cdn.simpleicons.org/youtube/1C1917',
-  google: 'https://cdn.simpleicons.org/google/1C1917',
-  'google one': 'https://cdn.simpleicons.org/google/1C1917',
-  chatgpt: 'https://cdn.simpleicons.org/openai/1C1917',
-  openai: 'https://cdn.simpleicons.org/openai/1C1917',
-  amazon: 'https://cdn.simpleicons.org/amazon/1C1917',
-  'amazon prime': 'https://cdn.simpleicons.org/amazon/1C1917',
-  prime: 'https://cdn.simpleicons.org/amazon/1C1917',
-  apple: 'https://cdn.simpleicons.org/apple/1C1917',
-  'apple icloud+': 'https://cdn.simpleicons.org/apple/1C1917',
-  adobe: 'https://cdn.simpleicons.org/adobe/1C1917',
-  'adobe creative cloud': 'https://cdn.simpleicons.org/adobe/1C1917',
-  figma: 'https://cdn.simpleicons.org/figma/1C1917',
-  github: 'https://cdn.simpleicons.org/github/1C1917',
-  'github copilot': 'https://cdn.simpleicons.org/github/1C1917',
-  disney: 'https://cdn.simpleicons.org/disneyplus/1C1917',
-  'disney+ hotstar': 'https://cdn.simpleicons.org/disneyplus/1C1917',
-  hotstar: 'https://cdn.simpleicons.org/disneyplus/1C1917',
-  xbox: 'https://cdn.simpleicons.org/xbox/1C1917',
-  'xbox game pass': 'https://cdn.simpleicons.org/xbox/1C1917',
-  linkedin: 'https://cdn.simpleicons.org/linkedin/1C1917',
-  canva: 'https://cdn.simpleicons.org/canva/1C1917',
-  notion: 'https://cdn.simpleicons.org/notion/1C1917',
-  midjourney: 'https://cdn.simpleicons.org/midjourney/1C1917',
-  hulu: 'https://cdn.simpleicons.org/hulu/1C1917',
-  playstation: 'https://cdn.simpleicons.org/playstation/1C1917',
-  slack: 'https://cdn.simpleicons.org/slack/1C1917',
-  jio: 'https://cdn.simpleicons.org/jio/1C1917',
-  airtel: 'https://cdn.simpleicons.org/airtel/1C1917',
-  vi: 'https://cdn.simpleicons.org/vodafone/1C1917',
-  vodafone: 'https://cdn.simpleicons.org/vodafone/1C1917'
+// Reliable logo mappings for popular services
+const DOMAIN_MAPPINGS = {
+  chatgpt: 'chatgpt.com',
+  openai: 'openai.com',
+  adobe: 'adobe.com',
+  'adobe creative cloud': 'adobe.com',
+  spotify: 'spotify.com',
+  netflix: 'netflix.com',
+  youtube: 'youtube.com',
+  'youtube music': 'youtube.com',
+  amazon: 'amazon.in',
+  'amazon prime': 'amazon.in',
+  apple: 'apple.com',
+  'apple icloud+': 'apple.com',
+  figma: 'figma.com',
+  github: 'github.com',
+  'github copilot': 'github.com',
+  hotstar: 'hotstar.com',
+  'disney+ hotstar': 'hotstar.com',
+  'jio cinema': 'jiocinema.com',
+  sonyliv: 'sonyliv.com',
+  zee5: 'zee5.com',
+  audible: 'audible.in',
+  notion: 'notion.so',
+  slack: 'slack.com',
+  zoom: 'zoom.us',
+  canva: 'canva.com',
+  swiggy: 'swiggy.com',
+  zomato: 'zomato.com',
+  duolingo: 'duolingo.com',
+  coursera: 'coursera.org',
+  nordvpn: 'nordvpn.com',
+  xbox: 'xbox.com',
+  playstation: 'playstation.com',
+  discord: 'discord.com'
 };
 
 export function getLogoUrl(serviceName, website = '') {
   if (!serviceName) return null;
   const nameLower = serviceName.toLowerCase().trim();
 
-  // 1. Direct match or key match in BRAND_LOGOS
-  for (const [key, logoUrl] of Object.entries(BRAND_LOGOS)) {
-    if (nameLower.includes(key)) {
-      return logoUrl;
-    }
-  }
-
-  // 2. Domain-based fallback from website url if provided
+  // 1. If explicit website domain provided
   if (website) {
     try {
       const cleanHost = website.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
       if (cleanHost) {
         return `https://www.google.com/s2/favicons?domain=${cleanHost}&sz=128`;
       }
-    } catch (e) {
-      // Fallback
+    } catch (e) {}
+  }
+
+  // 2. Check DOMAIN_MAPPINGS
+  for (const [key, domain] of Object.entries(DOMAIN_MAPPINGS)) {
+    if (nameLower.includes(key)) {
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
     }
   }
 
-  // 3. Fallback to Google Favicons using service name + .com
+  // 3. Fallback to Google Favicons using sanitized name + .com
   const sanitized = nameLower.replace(/[^a-z0-9]/g, '');
   if (sanitized) {
     return `https://www.google.com/s2/favicons?domain=${sanitized}.com&sz=128`;

@@ -3,6 +3,7 @@ import { useSubscriptions } from '../context/SubscriptionContext';
 import { getLogoUrl } from '../utils/getLogoUrl';
 import { X, Calendar, CreditCard, Tag, Edit3, Trash2, Check, Bell, Clock, Zap, Plus } from 'lucide-react';
 import CustomSelect from './CustomSelect';
+import ServiceLogo from './ServiceLogo';
 
 export default function SubscriptionDetailModal() {
   const { 
@@ -125,20 +126,7 @@ export default function SubscriptionDetailModal() {
 
         {/* Top Branding with Real Black Logo */}
         <div className="flex items-center gap-3.5 pt-2">
-          <div className="w-12 h-12 rounded-2xl bg-white/90 dark:bg-white/90 p-2.5 flex items-center justify-center shadow-md border border-black/10 overflow-hidden">
-            {logoUrl && !logoError ? (
-              <img
-                src={logoUrl}
-                alt={selectedSub.serviceName}
-                onError={() => setLogoError(true)}
-                className="w-full h-full object-contain grayscale contrast-200"
-              />
-            ) : (
-              <span className="font-extrabold text-xl text-[#1C1917]">
-                {selectedSub.serviceName.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <ServiceLogo name={selectedSub.serviceName} website={selectedSub.website} className="w-12 h-12 rounded-2xl bg-white/90 border border-black/10 shadow-md" textClassName="text-xl" />
 
           <div>
             <h2 className="text-xl font-extrabold tracking-tight">

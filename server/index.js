@@ -15,6 +15,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static frontend build if dist folder exists
+const distPath = join(__dirname, '../dist');
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
+
 // Initialize Firebase Admin SDK
 let db = null;
 try {
@@ -79,6 +85,22 @@ function getDaysRemaining(dateStr) {
 }
 
 let memoryFallback = [];
+
+// Root Status Endpoint
+app.get('/', (req, res) => {
+  if (existsSync(distPath)) {
+    return res.sendFile(join(distPath, 'index.html'));
+  }
+  res.json({
+    status: 'online',
+    app: 'UnSub REST API Backend',
+    database: db ? 'Firebase Firestore (reminder-94d10)' : 'Memory Fallback',
+    endpoints: [
+      '/api/subscriptions',
+      '/api/analytics/monthly-total'
+    ]
+  });
+});
 
 // REST ENDPOINTS
 
@@ -303,6 +325,14 @@ app.delete('/api/subscriptions/:id', async (req, res) => {
     console.error('DELETE /api/subscriptions/:id error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// SPA Fallback for client routing
+app.get('*', (req, res) => {
+  if (existsSync(distPath)) {
+    return res.sendFile(join(distPath, 'index.html'));
+  }
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 app.listen(PORT, () => {

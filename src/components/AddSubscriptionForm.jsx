@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { PRESET_SERVICES, CATEGORIES } from '../data/presets';
 import { getLogoUrl } from '../utils/getLogoUrl';
 import { Plus, Sparkles } from 'lucide-react';
+import CustomSelect from './CustomSelect';
+
+// Billing cycle options — "custom" triggers a day-count input
+const CYCLE_OPTIONS = [
+  { value: 'monthly',   label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'yearly',    label: 'Yearly' },
+  { value: 'days',      label: 'Days' },
+];
 
 function PresetChip({ preset, isSelected, onSelect }) {
   const [logoError, setLogoError] = useState(false);
@@ -20,12 +29,7 @@ function PresetChip({ preset, isSelected, onSelect }) {
     >
       <div className="w-4 h-4 rounded-md bg-white dark:bg-black/20 flex items-center justify-center overflow-hidden flex-shrink-0">
         {logoUrl && !logoError ? (
-          <img
-            src={logoUrl}
-            alt={preset.name}
-            onError={() => setLogoError(true)}
-            className="w-full h-full object-contain"
-          />
+          <img src={logoUrl} alt={preset.name} onError={() => setLogoError(true)} className="w-full h-full object-contain" />
         ) : (
           <span className="text-[10px] font-black">{preset.name.charAt(0)}</span>
         )}
@@ -42,15 +46,46 @@ export default function AddSubscriptionForm({ isModal = false }) {
   const [category, setCategory] = useState('Entertainment');
   const [price, setPrice] = useState('');
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [nextBillingDate, setNextBillingDate] = useState(() => {
-    const defaultDate = new Date();
-    defaultDate.setDate(defaultDate.getDate() + 30);
-    return defaultDate.toISOString().split('T')[0];
-  });
+  const [customDays, setCustomDays] = useState('');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [planType, setPlanType] = useState('Standard');
   const [paymentMethod, setPaymentMethod] = useState('•••• 0205');
   const [notes, setNotes] = useState('');
   const [selectedPreset, setSelectedPreset] = useState(null);
+
+  // Refs for auto-focus on Enter
+  const refs = {
+    serviceName: useRef(null),
+    customDays:  useRef(null),
+    price:       useRef(null),
+    startDate:   useRef(null),
+    planType:    useRef(null),
+    paymentMethod: useRef(null),
+    notes:       useRef(null),
+  };
+
+  const focusNext = (nextKey) => refs[nextKey]?.current?.focus();
+
+  const computeNextBillingDate = (start, cycle, days) => {
+    if (!start) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cycleDays = cycle === 'days' ? parseInt(days) || 0 : 0;
+    const addCycle = (d) => {
+      const nd = new Date(d);
+      if (cycle === 'monthly')        nd.setMonth(nd.getMonth() + 1);
+      else if (cycle === 'quarterly') nd.setMonth(nd.getMonth() + 3);
+      else if (cycle === 'yearly')    nd.setFullYear(nd.getFullYear() + 1);
+      else if (cycle === 'days')      nd.setDate(nd.getDate() + cycleDays);
+      return nd;
+    };
+    if (cycle === 'days' && cycleDays < 1) return '';
+    let next = new Date(start);
+    while (next <= today) next = addCycle(next);
+    return next.toISOString().split('T')[0];
+  };
+
+  const computedNextDate = computeNextBillingDate(startDate, billingCycle, customDays);
 
   if (isModal && !isAddModalOpen) return null;
 
@@ -66,15 +101,20 @@ export default function AddSubscriptionForm({ isModal = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!serviceName || !price || !nextBillingDate) return;
+    if (!serviceName || !price || !startDate) return;
+    if (billingCycle === 'days' && (!customDays || parseInt(customDays) < 1)) return;
+
+    const cycleLabel = billingCycle === 'days' ? `${customDays} days` : billingCycle;
 
     const success = await addSubscription({
       serviceName,
       category,
       price: parseFloat(price),
       currency: 'INR',
-      billingCycle,
-      nextBillingDate,
+      billingCycle: cycleLabel,
+      customDays: billingCycle === 'days' ? parseInt(customDays) : undefined,
+      startDate,
+      nextBillingDate: computedNextDate,
       planType,
       paymentMethod,
       notes
@@ -83,50 +123,27 @@ export default function AddSubscriptionForm({ isModal = false }) {
     if (success) {
       setServiceName('');
       setPrice('');
+      setCustomDays('');
+      setStartDate(new Date().toISOString().split('T')[0]);
       setSelectedPreset(null);
       if (isModal) setIsAddModalOpen(false);
       setActiveTab('dashboard');
     }
   };
 
+  const categoryOptions = CATEGORIES.filter(c => c !== 'All').map(c => ({ value: c, label: c }));
+
   const formContent = (
     <div className="space-y-4 text-[#1C1917] dark:text-[#F5F5F3]">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-[#DF4F38] text-white shadow-sm">
-            <Plus className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="font-extrabold text-base tracking-tight">
-              Add Subscription
-            </h2>
-            <p className="text-xs text-[#78746D] dark:text-[#A8A29E] font-semibold">
-              Track a new service in Rupees (₹)
-            </p>
-          </div>
-        </div>
-
-        {!isModal && (
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className="text-xs font-bold px-3 py-1 rounded-full bg-[#E2DDD4] dark:bg-[#24221E] text-[#1C1917] dark:text-[#F5F5F3] hover:bg-[#D5CFC5] dark:hover:bg-[#2D2A25] transition-colors border border-black/5 dark:border-white/10"
-          >
-            Back to Dashboard
-          </button>
-        )}
-      </div>
-
       {/* Form Card */}
       <form onSubmit={handleSubmit} className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-4">
-        
-        {/* Quick Presets with Real Logos */}
+
+        {/* Quick Presets */}
         <div>
           <label className="text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] flex items-center gap-1 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#DF4F38]" />
             <span>Popular Presets (Indian Pricing ₹)</span>
           </label>
-
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 -mx-2 px-2">
             {PRESET_SERVICES.map((preset) => (
               <PresetChip
@@ -144,14 +161,13 @@ export default function AddSubscriptionForm({ isModal = false }) {
           <div>
             <label className="text-xs font-bold block mb-1">Service Name *</label>
             <input
+              ref={refs.serviceName}
               type="text"
               required
               placeholder="e.g. Spotify, Netflix, Jio, Airtel"
               value={serviceName}
-              onChange={(e) => {
-                setServiceName(e.target.value);
-                setSelectedPreset(null);
-              }}
+              onChange={(e) => { setServiceName(e.target.value); setSelectedPreset(null); }}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('price'))}
               className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
             />
           </div>
@@ -159,66 +175,91 @@ export default function AddSubscriptionForm({ isModal = false }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-xs font-bold block mb-1">Category</label>
-              <select
+              <CustomSelect
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
-              >
-                {CATEGORIES.filter(c => c !== 'All').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                onChange={setCategory}
+                options={categoryOptions}
+              />
             </div>
 
             <div>
               <label className="text-xs font-bold block mb-1">Billing Cycle</label>
-              <select
+              <CustomSelect
                 value={billingCycle}
-                onChange={(e) => setBillingCycle(e.target.value)}
-                className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none cursor-pointer"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="weekly">Weekly</option>
-              </select>
+                onChange={(v) => { setBillingCycle(v); setCustomDays(''); }}
+                options={CYCLE_OPTIONS}
+              />
             </div>
           </div>
+
+          {/* Custom days input — shown only when "Days" is selected */}
+          {billingCycle === 'days' && (
+            <div>
+              <label className="text-xs font-bold block mb-1">How many days? *</label>
+              <input
+                ref={refs.customDays}
+                type="number"
+                min="1"
+                required
+                placeholder="e.g. 28, 45, 56..."
+                value={customDays}
+                onChange={(e) => setCustomDays(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('price'))}
+                className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 focus:outline-none"
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-xs font-bold block mb-1">Price (₹) *</label>
               <input
+                ref={refs.price}
                 type="number"
                 required
                 step="0.01"
                 placeholder="649"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('startDate'))}
                 className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] placeholder:text-[#78746D]/60 dark:placeholder:text-[#A8A29E]/60 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold block mb-1">Next Renewal Date *</label>
+              <label className="text-xs font-bold block mb-1">Starting Date *</label>
               <input
+                ref={refs.startDate}
                 type="date"
                 required
-                value={nextBillingDate}
-                onChange={(e) => setNextBillingDate(e.target.value)}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('planType'))}
                 className="w-full px-3 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
               />
             </div>
           </div>
 
+          {/* Auto-computed next renewal preview */}
+          {computedNextDate && (
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-[14px] bg-[#DF4F38]/10 border border-[#DF4F38]/20">
+              <span className="text-[10px] font-extrabold text-[#DF4F38]">📅 Next renewal auto-set to:</span>
+              <span className="text-[10px] font-extrabold text-[#1C1917] dark:text-[#F5F5F3]">
+                {new Date(computedNextDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-xs font-bold block mb-1">Plan Tier</label>
               <input
+                ref={refs.planType}
                 type="text"
                 placeholder="Standard / 4K"
                 value={planType}
                 onChange={(e) => setPlanType(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('paymentMethod'))}
                 className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
               />
             </div>
@@ -226,10 +267,12 @@ export default function AddSubscriptionForm({ isModal = false }) {
             <div>
               <label className="text-xs font-bold block mb-1">Payment Method</label>
               <input
+                ref={refs.paymentMethod}
                 type="text"
                 placeholder="UPI / Card"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), focusNext('notes'))}
                 className="w-full px-4 py-3 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/5 dark:border-white/10 text-xs font-extrabold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none"
               />
             </div>
@@ -238,6 +281,7 @@ export default function AddSubscriptionForm({ isModal = false }) {
           <div>
             <label className="text-xs font-bold block mb-1">Notes (Optional)</label>
             <input
+              ref={refs.notes}
               type="text"
               placeholder="e.g. Split with roomie"
               value={notes}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { getLogoUrl } from '../utils/getLogoUrl';
 import { X, Calendar, CreditCard, Tag, Edit3, Trash2, Check, Bell, Clock, Zap, Plus } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 
 export default function SubscriptionDetailModal() {
   const { 
@@ -21,6 +22,37 @@ export default function SubscriptionDetailModal() {
   const [price, setPrice] = useState('');
   const [planType, setPlanType] = useState('');
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [customDays, setCustomDays] = useState('');
+  const [startDate, setStartDate] = useState('');
+
+  const CYCLE_OPTIONS = [
+    { value: 'monthly',   label: 'Monthly' },
+    { value: 'quarterly', label: 'Quarterly' },
+    { value: 'yearly',    label: 'Yearly' },
+    { value: 'days',      label: 'Days' },
+  ];
+
+  // Patch computeNextBillingDate to support custom days
+  const computeNextBillingDate = (start, cycle) => {
+    if (!start) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cycleDays = cycle === 'days' ? parseInt(customDays) || 0 : 0;
+    const addCycle = (d) => {
+      const nd = new Date(d);
+      if (cycle === 'monthly')        nd.setMonth(nd.getMonth() + 1);
+      else if (cycle === 'quarterly') nd.setMonth(nd.getMonth() + 3);
+      else if (cycle === 'yearly')    nd.setFullYear(nd.getFullYear() + 1);
+      else if (cycle === 'days')      nd.setDate(nd.getDate() + cycleDays);
+      return nd;
+    };
+    if (cycle === 'days' && cycleDays < 1) return '';
+    let next = new Date(start);
+    while (next <= today) next = addCycle(next);
+    return next.toISOString().split('T')[0];
+  };
+
+  const computedNextDate = computeNextBillingDate(startDate, billingCycle);
 
   if (!selectedSub) return null;
 
@@ -30,16 +62,30 @@ export default function SubscriptionDetailModal() {
     setServiceName(selectedSub.serviceName);
     setPrice(selectedSub.price);
     setPlanType(selectedSub.planType || '');
-    setBillingCycle(selectedSub.billingCycle || 'monthly');
+    const cycle = selectedSub.billingCycle || 'monthly';
+    const customMatch = cycle.match(/(\d+)\s*days?/i);
+    if (customMatch) {
+      setBillingCycle('days');
+      setCustomDays(customMatch[1]);
+    } else {
+      setBillingCycle(cycle);
+      setCustomDays('');
+    }
+    setStartDate(selectedSub.startDate || selectedSub.nextBillingDate || new Date().toISOString().split('T')[0]);
     setIsEditing(true);
   };
 
   const handleSaveUpdate = async () => {
+    const cycleLabel = billingCycle === 'days' ? `${customDays} days` : billingCycle;
+    const nextBillingDate = computedNextDate || selectedSub.nextBillingDate;
     const success = await updateSubscription(selectedSub.id, {
       serviceName,
       price: parseFloat(price),
       planType,
-      billingCycle
+      billingCycle: cycleLabel,
+      customDays: billingCycle === 'days' ? parseInt(customDays) : undefined,
+      startDate,
+      nextBillingDate
     });
     if (success) {
       setIsEditing(false);
@@ -133,17 +179,53 @@ export default function SubscriptionDetailModal() {
               </div>
 
               <div>
-                <label className="text-xs font-bold block mb-1">Cycle</label>
-                <select
+                <label className="text-xs font-bold block mb-1">Billing Cycle</label>
+                <CustomSelect
                   value={billingCycle}
-                  onChange={(e) => setBillingCycle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
-                >
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
+                  onChange={(v) => { setBillingCycle(v); setCustomDays(''); }}
+                  options={CYCLE_OPTIONS}
+                />
               </div>
             </div>
+
+            {/* Custom days input */}
+            {billingCycle === 'days' && (
+              <div>
+                <label className="text-xs font-bold block mb-1">How many days? *</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 28, 45, 56..."
+                  value={customDays}
+                  onChange={(e) => setCustomDays(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
+                />
+              </div>
+            )}
+
+            {/* Starting Date — renewal is auto-computed */}
+            <div>
+              <label className="text-xs font-bold block mb-1">Starting / Subscription Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-[#EBE6DD] dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold focus:outline-none"
+              />
+            </div>
+
+            {/* Auto-computed Next Renewal Preview */}
+            {computedNextDate && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#DF4F38]/10 border border-[#DF4F38]/20">
+                <Calendar className="w-3.5 h-3.5 text-[#DF4F38] flex-shrink-0" />
+                <span className="text-[10px] font-extrabold text-[#DF4F38]">
+                  Next renewal auto-set to:{' '}
+                  <span className="text-[#1C1917] dark:text-[#F5F5F3]">
+                    {new Date(computedNextDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                </span>
+              </div>
+            )}
 
             <div className="flex gap-2 pt-2">
               <button

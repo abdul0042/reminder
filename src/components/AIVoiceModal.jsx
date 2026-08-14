@@ -16,6 +16,43 @@ function AIVoiceIcon({ className = "w-5 h-5" }) {
   );
 }
 
+// Extract exact minutes from spoken phrase — always client-side authoritative
+function extractMinutesFromText(text) {
+  const tLower = text.toLowerCase().trim();
+
+  // Handle "a minute", "one minute", "1 minute", "a min"
+  if (/\b(a|one|1)\s*min(ute)?\b/.test(tLower)) return 1;
+  // Handle "half an hour", "half hour"
+  if (/\bhalf\s+an?\s+hour\b/.test(tLower)) return 30;
+  // Handle "an hour", "one hour", "1 hour"
+  if (/\b(an|one|1)\s*hour\b/.test(tLower)) return 60;
+  // Handle "X hours"
+  const hoursMatch = tLower.match(/(\d+(?:\.\d+)?)\s*hours?\b/);
+  if (hoursMatch) return Math.round(parseFloat(hoursMatch[1]) * 60);
+  // Handle "X minutes" / "X mins"
+  const minsMatch = tLower.match(/(\d+(?:\.\d+)?)\s*min(?:ute)?s?\b/);
+  if (minsMatch) return Math.round(parseFloat(minsMatch[1]));
+
+  return 5; // sensible default only if nothing is said
+}
+
+// Clean reminder title — strip time phrases from the end/start
+function cleanReminderTitle(text) {
+  let clean = text
+    .replace(/^remind\s+me\s+to\s*/i, '')
+    .replace(/^remind\s+me\s*/i, '')
+    .replace(/\s+in\s+(a|an|one|\d+(?:\.\d+)?)\s*(minute|min|hour|hr)s?\b.*$/i, '')
+    .replace(/\s+(a|an|one|\d+(?:\.\d+)?)\s*(minute|min|hour|hr)s?\b.*$/i, '')
+    .replace(/\s*in\s+(a|an|one|\d+)\s*(min|minute|hour|hr)s?\b/i, '')
+    .trim();
+
+  if (!clean || ['in', 'to', 'me'].includes(clean.toLowerCase())) {
+    return 'Quick Reminder';
+  }
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
+
 export default function AIVoiceModal({ isOpen, onClose }) {
   const { addSubscription, addGeneralReminder, showToast } = useSubscriptions();
 
@@ -77,16 +114,15 @@ export default function AIVoiceModal({ isOpen, onClose }) {
   };
 
   const parseVoiceClientFallback = (text) => {
-    const tLower = text.toLowerCase();
+    const tLower = text.toLowerCase().trim();
     const isGeneral = tLower.includes('remind me') || tLower.includes('signature') || tLower.includes('buy') || tLower.includes('task') || (!tLower.includes('bill') && !tLower.includes('rupees') && !tLower.includes('₹'));
 
     if (isGeneral) {
-      const cleanTitle = text.replace(/^remind me to/i, '').replace(/^remind me/i, '').trim();
       return {
         type: 'general_reminder',
         action: 'add_general_reminder',
-        title: cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : text,
-        minutes: 15,
+        title: cleanReminderTitle(text),
+        minutes: extractMinutesFromText(text),
         note: 'Added via AI Voice Assistant'
       };
     }
@@ -154,7 +190,13 @@ export default function AIVoiceModal({ isOpen, onClose }) {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.data) {
-          setParsedResult(data.data);
+          const result = data.data;
+          // Always override minutes from the original transcript for accuracy
+          if (result.type === 'general_reminder') {
+            result.minutes = extractMinutesFromText(text);
+            result.title = cleanReminderTitle(text);
+          }
+          setParsedResult(result);
           playAlarmSound();
           return;
         }
@@ -179,7 +221,7 @@ export default function AIVoiceModal({ isOpen, onClose }) {
     if (parsedResult.type === 'general_reminder' || parsedResult.action === 'add_general_reminder') {
       addGeneralReminder(
         parsedResult.title || 'General Task',
-        parsedResult.minutes || 15,
+        parsedResult.minutes !== undefined ? parsedResult.minutes : 1,
         parsedResult.note || ''
       );
       setParsedResult(null);
@@ -209,8 +251,8 @@ export default function AIVoiceModal({ isOpen, onClose }) {
   };
 
   const sampleCommands = [
+    "Remind me in a minute to check mail",
     "Remind me to get a signature from them",
-    "Remind me to call John in 10 minutes",
     "Add a bill of Spotify for ₹100 for 30 days",
     "Add Netflix ₹649 starting today"
   ];
@@ -288,7 +330,7 @@ export default function AIVoiceModal({ isOpen, onClose }) {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Parsing with Groq AI...</span>
+                    <span>Parsing with AI...</span>
                   </>
                 ) : (
                   <>
@@ -320,7 +362,7 @@ export default function AIVoiceModal({ isOpen, onClose }) {
                   {parsedResult.title}
                 </span>
                 <span className="text-xs font-semibold text-[#DF4F38]">
-                  Alert set for {parsedResult.minutes || 15} mins
+                  Alert set for {parsedResult.minutes !== undefined ? parsedResult.minutes : 1} min{parsedResult.minutes === 1 ? '' : 's'}
                 </span>
               </div>
             ) : (

@@ -56,16 +56,22 @@ export default function GeneralRemindersSection() {
           {generalReminders.map((task) => (
             <div
               key={task.id}
-              className={`p-3.5 rounded-[20px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 flex items-center justify-between transition-all ${
-                task.completed ? 'opacity-50 line-through' : ''
+              className={`p-3.5 rounded-[20px] border flex items-center justify-between transition-all ${
+                task.status === 'rang'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700'
+                  : task.completed
+                  ? 'bg-[#E2DDD4]/50 dark:bg-[#24221E]/50 border-black/5 dark:border-white/5 opacity-50'
+                  : 'bg-[#E2DDD4] dark:bg-[#24221E] border-black/5 dark:border-white/5'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => toggleGeneralReminderComplete(task.id)}
-                  className="text-[#DF4F38] hover:scale-110 transition-transform flex-shrink-0"
+                  className="flex-shrink-0 transition-transform hover:scale-110"
                 >
-                  {task.completed ? (
+                  {task.status === 'rang' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500" />
+                  ) : task.completed ? (
                     <CheckCircle2 className="w-5 h-5 fill-[#DF4F38] text-white" />
                   ) : (
                     <Circle className="w-5 h-5 text-[#78746D]" />
@@ -73,16 +79,21 @@ export default function GeneralRemindersSection() {
                 </button>
 
                 <div className="min-w-0">
-                  <span className="font-extrabold text-xs text-[#1C1917] dark:text-[#F5F5F3] block truncate">
+                  <span className={`font-extrabold text-xs block truncate ${task.status === 'rang' ? 'text-emerald-800 dark:text-emerald-300' : 'text-[#1C1917] dark:text-[#F5F5F3]'}`}>
                     {task.title}
                   </span>
-                  {task.dueTime ? (
+
+                  {task.status === 'rang' ? (
+                    <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <Bell className="w-3 h-3" /> Rang! Tap ✓ to dismiss
+                    </span>
+                  ) : task.dueTime ? (
                     <span className="text-[10px] font-semibold text-[#78746D] dark:text-[#A8A29E] block">
                       {task.dueTime}
                     </span>
                   ) : task.minutes ? (
                     <span className="text-[10px] font-semibold text-[#DF4F38] flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Alert set for {task.minutes} mins
+                      <Clock className="w-3 h-3" /> Alert set for {task.minutes} min{task.minutes === 1 ? '' : 's'}
                     </span>
                   ) : null}
                 </div>
@@ -90,7 +101,7 @@ export default function GeneralRemindersSection() {
 
               <button
                 onClick={() => deleteGeneralReminder(task.id)}
-                className="p-1.5 rounded-full text-[#78746D] hover:text-rose-600 transition-colors"
+                className="p-1.5 rounded-full text-[#78746D] hover:text-rose-600 transition-colors flex-shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

@@ -110,7 +110,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// AI VOICE COMMAND PARSER (Groq API + Smart Fallback for both Subscriptions & General Tasks)
+// AI VOICE COMMAND PARSER (Groq API + Precision Minute & "a minute" / "an hour" Parser)
 app.post('/api/ai/parse-voice', async (req, res) => {
   const { transcript, apiKey } = req.body;
 
@@ -134,7 +134,16 @@ app.post('/api/ai/parse-voice', async (req, res) => {
             {
               role: 'system',
               content: `You are UnSub AI Voice Parser. Detect if the user wants to add a subscription OR set a general reminder/task.
-Output ONLY JSON matching one of these two formats:
+Output ONLY JSON matching one of these formats:
+
+For General Reminders/Tasks (e.g. "remind me in a minute", "remind me in 1 minute to check mail"):
+{
+  "type": "general_reminder",
+  "action": "add_general_reminder",
+  "title": "Clean concise task title (e.g. 'Check mail' or 'Quick Reminder')",
+  "minutes": Exact number of minutes spoken ("a minute" / "1 minute" -> 1, "5 mins" -> 5, "an hour" -> 60),
+  "note": ""
+}
 
 For Subscriptions:
 {
@@ -146,15 +155,6 @@ For Subscriptions:
   "days": 30,
   "category": "Entertainment" | "Music" | "Productivity" | "AI & Tech",
   "planType": "Standard"
-}
-
-For General Reminders/Tasks (e.g. "remind me to get a signature", "buy groceries"):
-{
-  "type": "general_reminder",
-  "action": "add_general_reminder",
-  "title": "Title of reminder",
-  "minutes": 15,
-  "note": ""
 }`
             },
             {
@@ -179,17 +179,42 @@ For General Reminders/Tasks (e.g. "remind me to get a signature", "buy groceries
     }
   }
 
-  // Fallback Smart Parser
-  const tLower = transcript.toLowerCase();
-
-  // Detect general task intent if phrase starts with "remind me to" or has no price
-  const isGeneral = tLower.includes('remind me to') || tLower.includes('signature') || tLower.includes('buy') || tLower.includes('task') || (!tLower.includes('bill') && !tLower.includes('rupees') && !tLower.includes('₹') && !tLower.includes('price'));
+  // Fallback Smart Parser with comprehensive "a minute" & spoken word parsing
+  const tLower = transcript.toLowerCase().trim();
+  const isGeneral = tLower.includes('remind me') || tLower.includes('signature') || tLower.includes('buy') || tLower.includes('task') || (!tLower.includes('bill') && !tLower.includes('rupees') && !tLower.includes('₹') && !tLower.includes('price'));
 
   if (isGeneral) {
-    const cleanTitle = transcript
+    let extractedMinutes = 5;
+
+    // Check for "a minute", "1 minute", "one minute", "a min"
+    if (tLower.includes('a minute') || tLower.includes('1 minute') || tLower.includes('one minute') || tLower.includes('a min') || tLower.includes('1 min')) {
+      extractedMinutes = 1;
+    } else if (tLower.includes('an hour') || tLower.includes('1 hour') || tLower.includes('one hour')) {
+      extractedMinutes = 60;
+    } else {
+      const minMatch = tLower.match(/(\d+(?:\.\d+)?)\s*(?:minute|min|m|hour|hr|h)/i);
+      if (minMatch) {
+        const num = parseFloat(minMatch[1]);
+        if (tLower.includes('hour') || tLower.includes('hr')) {
+          extractedMinutes = num * 60;
+        } else {
+          extractedMinutes = num;
+        }
+      }
+    }
+
+    let cleanTitle = transcript
       .replace(/^remind me to/i, '')
       .replace(/^remind me/i, '')
+      .replace(/in\s+a\s*(?:minute|min|m|hour|hr)/i, '')
+      .replace(/in\s+an\s*hour/i, '')
+      .replace(/in\s+\d+\s*(?:minutes|minute|mins|min|m|hours|hour|hr|h)/i, '')
+      .replace(/\d+\s*(?:minutes|minute|mins|min|m|hours|hour|hr|h)/i, '')
       .trim();
+
+    if (!cleanTitle || cleanTitle.toLowerCase() === 'in' || cleanTitle.toLowerCase() === 'to') {
+      cleanTitle = 'Quick Reminder';
+    }
 
     return res.json({
       success: true,
@@ -197,8 +222,8 @@ For General Reminders/Tasks (e.g. "remind me to get a signature", "buy groceries
       data: {
         type: 'general_reminder',
         action: 'add_general_reminder',
-        title: cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : transcript,
-        minutes: 15,
+        title: cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1),
+        minutes: extractedMinutes,
         note: 'Added via Voice Assistant'
       }
     });

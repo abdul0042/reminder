@@ -144,15 +144,17 @@ export function SubscriptionProvider({ children }) {
 
   // Add General Task / Reminder
   const addGeneralReminder = (title, minutes = 5, note = '') => {
-    const durationMs = (minutes || 5) * 60 * 1000;
+    const id = `gen_${Date.now()}`;
+    const durationMs = Math.max((minutes || 1), 0.016) * 60 * 1000;
     const fireAt = Date.now() + durationMs;
 
     const newGen = {
-      id: `gen_${Date.now()}`,
+      id,
       title,
       note,
       minutes,
       fireAt,
+      status: 'pending', // pending | rang | completed
       completed: false,
       createdAt: new Date().toISOString()
     };
@@ -164,10 +166,14 @@ export function SubscriptionProvider({ children }) {
     }
 
     setTimeout(() => {
+      // Mark as 'rang' after the alarm fires
+      setGeneralReminders(prev =>
+        prev.map(item => item.id === id ? { ...item, status: 'rang' } : item)
+      );
       triggerAlarmAlert(title, note);
     }, durationMs);
 
-    showToast(`Added reminder: "${title}"`, 'success');
+    showToast(`⏳ Reminder set: "${title}" in ${minutes} min${minutes === 1 ? '' : 's'}`, 'success');
   };
 
   const toggleGeneralReminderComplete = (id) => {

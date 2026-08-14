@@ -140,7 +140,7 @@ app.get('/api/subscriptions', async (req, res) => {
 
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(sub => 
+      result = result.filter(sub =>
         sub.serviceName?.toLowerCase().includes(q) ||
         sub.planType?.toLowerCase().includes(q) ||
         sub.category?.toLowerCase().includes(q)
@@ -187,7 +187,7 @@ app.get('/api/analytics/monthly-total', async (req, res) => {
     }
 
     const activeSubs = allSubs.filter(sub => sub.status === 'active');
-    
+
     let totalMonthlySpend = 0;
     const categoryBreakdown = {};
 

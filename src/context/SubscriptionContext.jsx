@@ -16,7 +16,12 @@ export function SubscriptionProvider({ children }) {
 
   // Dark Mode State
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('subpulse_theme') === 'dark';
+    return localStorage.getItem('unsub_theme') === 'dark';
+  });
+
+  // Device Notifications Permission State
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    return typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted';
   });
 
   // PWA Installation state
@@ -37,7 +42,7 @@ export function SubscriptionProvider({ children }) {
   
   // Default Currency strictly INR (Rupees ₹)
   const [currency, setCurrency] = useState(() => {
-    return localStorage.getItem('subpulse_currency') || 'INR';
+    return localStorage.getItem('unsub_currency') || 'INR';
   });
 
   // Toast Notification
@@ -54,17 +59,104 @@ export function SubscriptionProvider({ children }) {
     if (darkMode) {
       root.classList.add('dark');
       document.body.style.backgroundColor = '#121212';
-      localStorage.setItem('subpulse_theme', 'dark');
+      localStorage.setItem('unsub_theme', 'dark');
     } else {
       root.classList.remove('dark');
       document.body.style.backgroundColor = '#EBE6DD';
-      localStorage.setItem('subpulse_theme', 'light');
+      localStorage.setItem('unsub_theme', 'light');
     }
   }, [darkMode]);
 
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
+
+  // Request Device Notification Permission
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      showToast('Notifications are not supported on this browser', 'error');
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        showToast('Device notifications enabled!', 'success');
+        sendTestNotification();
+        return true;
+      } else {
+        setNotificationsEnabled(false);
+        showToast('Notification permission denied', 'error');
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error enabling notifications', 'error');
+      return false;
+    }
+  };
+
+  // Send Test Push Notification
+  const sendTestNotification = () => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      showToast('Please enable notifications first', 'error');
+      return;
+    }
+
+    const title = 'UnSub Alert Active 🔔';
+    const options = {
+      body: 'Notifications are live! You will be alerted before your subscriptions renew.',
+      icon: '/logo.png',
+      badge: '/logo.png',
+      vibrate: [200, 100, 200]
+    };
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, options);
+      });
+    } else {
+      new Notification(title, options);
+    }
+    showToast('Sent test notification to your device!', 'success');
+  };
+
+  // Dispatch Renewal Notification Alert
+  const checkAndSendRenewalNotifications = useCallback((subs) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    subs.forEach(sub => {
+      if (sub.status !== 'active' || !sub.nextBillingDate) return;
+      
+      const target = new Date(sub.nextBillingDate);
+      const diffTime = target - today;
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (days >= 0 && days <= 3) {
+        const title = `UnSub Bill Alert 🔔`;
+        const body = days === 0 
+          ? `${sub.serviceName} renews TODAY!`
+          : `${sub.serviceName} renews in ${days} day${days > 1 ? 's' : ''}!`;
+
+        const options = {
+          body,
+          icon: '/logo.png',
+          badge: '/logo.png',
+          tag: `unsub_renew_${sub.id}_${days}`
+        };
+
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options));
+        } else {
+          new Notification(title, options);
+        }
+      }
+    });
+  }, []);
 
   // Listen to PWA beforeinstallprompt event
   useEffect(() => {
@@ -76,7 +168,7 @@ export function SubscriptionProvider({ children }) {
     const handleAppInstalled = () => {
       setIsPWAInstalled(true);
       setDeferredPrompt(null);
-      showToast('SubPulse App installed successfully!', 'success');
+      showToast('UnSub App installed successfully!', 'success');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -97,11 +189,10 @@ export function SubscriptionProvider({ children }) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        showToast('Installing SubPulse App...', 'success');
+        showToast('Installing UnSub App...', 'success');
       }
       setDeferredPrompt(null);
     } else {
-      // Show visual PWA step-by-step guide for iOS / Chrome Mobile / HTTP
       setShowPWAGuide(true);
     }
   };
@@ -117,7 +208,7 @@ export function SubscriptionProvider({ children }) {
 
   // Sync Currency to localStorage
   useEffect(() => {
-    localStorage.setItem('subpulse_currency', currency);
+    localStorage.setItem('unsub_currency', currency);
   }, [currency]);
 
   // Fetch Subscriptions from REST API
@@ -135,15 +226,17 @@ export function SubscriptionProvider({ children }) {
       const res = await fetch(`/api/subscriptions?${queryParams.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch subscriptions');
       const data = await res.json();
-      setSubscriptions(data.data || []);
+      const items = data.data || [];
+      setSubscriptions(items);
       setError(null);
+      checkAndSendRenewalNotifications(items);
     } catch (err) {
       console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [user, selectedCategory, searchQuery, sortBy, statusFilter]);
+  }, [user, selectedCategory, searchQuery, sortBy, statusFilter, checkAndSendRenewalNotifications]);
 
   // Fetch Analytics Summary from REST API
   const fetchAnalytics = useCallback(async () => {
@@ -309,6 +402,9 @@ export function SubscriptionProvider({ children }) {
         addSubscription,
         updateSubscription,
         deleteSubscription,
+        notificationsEnabled,
+        requestNotificationPermission,
+        sendTestNotification,
         toast,
         showToast,
         refreshData: () => { fetchSubscriptions(); fetchAnalytics(); }

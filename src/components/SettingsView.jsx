@@ -3,7 +3,7 @@ import { useSubscriptions } from '../context/SubscriptionContext';
 import { CURRENCIES } from '../data/presets';
 import { 
   User, LogOut, Bell, Database, ShieldCheck, 
-  Download, RefreshCw, Smartphone, Check, Moon, Sun 
+  Download, RefreshCw, Smartphone, Check, Moon, Sun, Send, BellOff 
 } from 'lucide-react';
 
 export default function SettingsView() {
@@ -19,7 +19,10 @@ export default function SettingsView() {
     canInstallPWA,
     isPWAInstalled,
     darkMode,
-    toggleDarkMode
+    toggleDarkMode,
+    notificationsEnabled,
+    requestNotificationPermission,
+    sendTestNotification
   } = useSubscriptions();
 
   const [reminderDays, setReminderDays] = useState('3');
@@ -85,7 +88,63 @@ export default function SettingsView() {
         </button>
       </div>
 
-      {/* 2. Theme & Dark Mode Switch */}
+      {/* 2. Device Push Notifications Card */}
+      <div className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#78746D] dark:text-[#A8A29E]">
+            Device Renewal Alerts
+          </h3>
+          <span className={`flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+            notificationsEnabled 
+              ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300'
+              : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300'
+          }`}>
+            {notificationsEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
+            <span>{notificationsEnabled ? 'Active 🔔' : 'Disabled'}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#DF4F38]/10 text-[#DF4F38]">
+              <Bell className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-extrabold text-xs block">Bill Renewal Alerts</span>
+              <span className="text-[11px] font-medium text-[#78746D] dark:text-[#A8A29E]">
+                Get notified before subscriptions charge you
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={requestNotificationPermission}
+            className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
+              notificationsEnabled ? 'bg-[#DF4F38]' : 'bg-[#C5BEB3]'
+            }`}
+          >
+            <div
+              className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${
+                notificationsEnabled ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            >
+              <Bell className={`w-3 h-3 ${notificationsEnabled ? 'text-[#DF4F38]' : 'text-slate-400'}`} />
+            </div>
+          </button>
+        </div>
+
+        {notificationsEnabled && (
+          <button
+            onClick={sendTestNotification}
+            className="w-full py-2.5 rounded-[16px] bg-[#EBE6DD] dark:bg-[#1A1918] hover:bg-[#D5CFC5] dark:hover:bg-[#2B2824] text-xs font-extrabold flex items-center justify-center gap-2 transition-all touch-shrink border border-black/5 dark:border-white/10"
+          >
+            <Send className="w-3.5 h-3.5 text-[#DF4F38]" />
+            <span>Send Test Notification to Device</span>
+          </button>
+        )}
+      </div>
+
+      {/* 3. Theme & Dark Mode Switch */}
       <div className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-3">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#78746D] dark:text-[#A8A29E]">
           Appearance & Theme
@@ -110,7 +169,6 @@ export default function SettingsView() {
             </div>
           </div>
 
-          {/* Toggle Switch */}
           <button
             onClick={toggleDarkMode}
             className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 relative focus:outline-none ${
@@ -132,7 +190,7 @@ export default function SettingsView() {
         </div>
       </div>
 
-      {/* 3. Profile & Account Card */}
+      {/* 4. Profile & Account Card */}
       <div className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-[#1C1917] dark:bg-white dark:text-[#1C1917] text-white flex items-center justify-center font-extrabold text-base overflow-hidden border-2 border-white/80 dark:border-black/50">
@@ -166,7 +224,7 @@ export default function SettingsView() {
         )}
       </div>
 
-      {/* 4. Preferences & Currency */}
+      {/* 5. Preferences & Currency */}
       <div className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-4">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#78746D] dark:text-[#A8A29E]">
           Preferences & Currency
@@ -213,7 +271,7 @@ export default function SettingsView() {
         </div>
       </div>
 
-      {/* 5. Firebase & Data Actions */}
+      {/* 6. Database & Storage */}
       <div className="p-5 rounded-[26px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 space-y-3">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#78746D] dark:text-[#A8A29E]">
           Database & Storage

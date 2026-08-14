@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { getLogoUrl } from '../utils/getLogoUrl';
-import { X, Calendar, CreditCard, Tag, Edit3, Trash2, Check } from 'lucide-react';
+import { X, Calendar, CreditCard, Tag, Edit3, Trash2, Check, Bell, Clock, Zap, Plus } from 'lucide-react';
 
 export default function SubscriptionDetailModal() {
-  const { selectedSub, setSelectedSub, updateSubscription, deleteSubscription, formatPrice } = useSubscriptions();
+  const { 
+    selectedSub, 
+    setSelectedSub, 
+    updateSubscription, 
+    deleteSubscription, 
+    formatPrice,
+    scheduleReminder 
+  } = useSubscriptions();
+
   const [isEditing, setIsEditing] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState('');
 
   const [serviceName, setServiceName] = useState('');
   const [price, setPrice] = useState('');
@@ -43,9 +52,22 @@ export default function SubscriptionDetailModal() {
     }
   };
 
+  const handleSetQuickReminder = (minutes) => {
+    scheduleReminder(selectedSub.serviceName, minutes);
+  };
+
+  const handleSetCustomReminder = (e) => {
+    e.preventDefault();
+    const mins = parseFloat(customMinutes);
+    if (!isNaN(mins) && mins >= 0) {
+      scheduleReminder(selectedSub.serviceName, mins);
+      setCustomMinutes('');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-t-[32px] sm:rounded-[32px] bg-[#EBE6DD] dark:bg-[#121212] border border-black/5 dark:border-white/10 shadow-2xl p-6 text-[#1C1917] dark:text-[#F5F5F3] space-y-5 animate-in slide-in-from-bottom-8 duration-300 relative">
+      <div className="w-full max-w-md rounded-t-[32px] sm:rounded-[32px] bg-[#EBE6DD] dark:bg-[#121212] border border-black/5 dark:border-white/10 shadow-2xl p-6 text-[#1C1917] dark:text-[#F5F5F3] space-y-5 animate-in slide-in-from-bottom-8 duration-300 relative max-h-[90vh] overflow-y-auto no-scrollbar">
         
         {/* Close Button */}
         <button
@@ -55,18 +77,18 @@ export default function SubscriptionDetailModal() {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Top Branding with Real Logo */}
+        {/* Top Branding with Real Black Logo */}
         <div className="flex items-center gap-3.5 pt-2">
-          <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1A1918] p-2 flex items-center justify-center shadow-md border border-black/10 dark:border-white/10 overflow-hidden">
+          <div className="w-12 h-12 rounded-2xl bg-white/90 dark:bg-white/90 p-2.5 flex items-center justify-center shadow-md border border-black/10 overflow-hidden">
             {logoUrl && !logoError ? (
               <img
                 src={logoUrl}
                 alt={selectedSub.serviceName}
                 onError={() => setLogoError(true)}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain grayscale contrast-200"
               />
             ) : (
-              <span className="font-extrabold text-xl text-[#1C1917] dark:text-[#F5F5F3]">
+              <span className="font-extrabold text-xl text-[#1C1917]">
                 {selectedSub.serviceName.charAt(0).toUpperCase()}
               </span>
             )}
@@ -142,6 +164,7 @@ export default function SubscriptionDetailModal() {
         ) : (
           /* View Mode Details */
           <div className="space-y-4">
+            {/* Price Banner */}
             <div className="p-4 rounded-[22px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-[#78746D] dark:text-[#A8A29E] block">Billing Cost</span>
@@ -153,6 +176,76 @@ export default function SubscriptionDetailModal() {
               </span>
             </div>
 
+            {/* Quick Snooze & Custom Alarm Reminder Section */}
+            <div className="p-4 rounded-[22px] bg-[#DF4F38]/10 border border-[#DF4F38]/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-[#DF4F38] flex items-center gap-1.5">
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Snooze & Set Alarm Reminder</span>
+                </span>
+                <span className="text-[10px] font-bold text-[#78746D] dark:text-[#A8A29E]">
+                  Sound + Push + Vibrate
+                </span>
+              </div>
+
+              {/* Frequent Minute Preset Chips */}
+              <div className="grid grid-cols-4 gap-1.5">
+                <button
+                  onClick={() => handleSetQuickReminder(0)}
+                  className="py-2.5 px-1 rounded-xl bg-white dark:bg-[#1A1918] hover:bg-[#DF4F38] hover:text-white border border-black/5 dark:border-white/10 text-xs font-extrabold flex items-center justify-center gap-1 transition-all touch-shrink"
+                >
+                  <Zap className="w-3 h-3 text-[#DF4F38]" />
+                  <span>0 Min</span>
+                </button>
+
+                <button
+                  onClick={() => handleSetQuickReminder(5)}
+                  className="py-2.5 px-1 rounded-xl bg-white dark:bg-[#1A1918] hover:bg-[#DF4F38] hover:text-white border border-black/5 dark:border-white/10 text-xs font-extrabold flex items-center justify-center gap-1 transition-all touch-shrink"
+                >
+                  <Clock className="w-3 h-3 text-[#DF4F38]" />
+                  <span>5 Mins</span>
+                </button>
+
+                <button
+                  onClick={() => handleSetQuickReminder(10)}
+                  className="py-2.5 px-1 rounded-xl bg-white dark:bg-[#1A1918] hover:bg-[#DF4F38] hover:text-white border border-black/5 dark:border-white/10 text-xs font-extrabold flex items-center justify-center gap-1 transition-all touch-shrink"
+                >
+                  <Clock className="w-3 h-3 text-amber-500" />
+                  <span>10 Mins</span>
+                </button>
+
+                <button
+                  onClick={() => handleSetQuickReminder(15)}
+                  className="py-2.5 px-1 rounded-xl bg-white dark:bg-[#1A1918] hover:bg-[#DF4F38] hover:text-white border border-black/5 dark:border-white/10 text-xs font-extrabold flex items-center justify-center gap-1 transition-all touch-shrink"
+                >
+                  <Clock className="w-3 h-3 text-blue-500" />
+                  <span>15 Mins</span>
+                </button>
+              </div>
+
+              {/* Custom Minutes Input */}
+              <form onSubmit={handleSetCustomReminder} className="flex gap-2 pt-1">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="Custom minutes (e.g. 2, 7, 30)..."
+                  value={customMinutes}
+                  onChange={(e) => setCustomMinutes(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-[#1A1918] border border-black/10 dark:border-white/10 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3] focus:outline-none placeholder:text-[#78746D]/60"
+                />
+                <button
+                  type="submit"
+                  disabled={!customMinutes}
+                  className="px-3.5 py-2 rounded-xl bg-[#DF4F38] disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all touch-shrink flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Set Alarm</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Plan Info List */}
             <div className="space-y-2 text-xs font-bold text-[#1C1917] dark:text-[#F5F5F3]">
               <div className="flex items-center justify-between p-3 rounded-xl bg-[#E2DDD4]/60 dark:bg-[#24221E]/60">
                 <span className="flex items-center gap-2 text-[#78746D] dark:text-[#A8A29E]">

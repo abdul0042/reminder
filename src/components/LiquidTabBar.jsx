@@ -1,137 +1,138 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { LayoutDashboard, PieChart, Plus, Settings } from 'lucide-react';
+import AIVoiceModal from './AIVoiceModal';
+
+// Minimalist Audio Waveform Icon for AI Voice
+function AIVoiceIcon({ className = "w-4.5 h-4.5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v18" />
+      <path d="M17 7v10" />
+      <path d="M7 7v10" />
+      <path d="M22 11v2" />
+      <path d="M2 11v2" />
+    </svg>
+  );
+}
 
 export default function LiquidTabBar() {
   const { activeTab, setActiveTab } = useSubscriptions();
-
-  const [prevIndex, setPrevIndex] = useState(0);
-  const [direction, setDirection] = useState('none');
-  const [isStretching, setIsStretching] = useState(false);
-
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'analytics', label: 'Analytics', icon: PieChart },
-    { id: 'add', label: 'Add', icon: Plus, isAdd: true },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
-
-  const getActiveIndex = () => {
-    if (activeTab === 'dashboard') return 0;
-    if (activeTab === 'analytics') return 1;
-    if (activeTab === 'add') return 2;
-    if (activeTab === 'settings') return 3;
-    return 0;
-  };
-
-  const activeIndex = getActiveIndex();
-
-  useEffect(() => {
-    if (activeIndex !== prevIndex) {
-      setDirection(activeIndex > prevIndex ? 'right' : 'left');
-      setIsStretching(true);
-
-      const timer = setTimeout(() => {
-        setIsStretching(false);
-        setPrevIndex(activeIndex);
-      }, 320);
-
-      return () => clearTimeout(timer);
-    }
-  }, [activeIndex, prevIndex]);
-
-  const handleTabClick = (tabId) => {
-    if (tabId !== activeTab) {
-      setActiveTab(tabId);
-    }
-  };
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   return (
     <>
-      {/* High-Precision SVG Gooey Filter for Liquid Mercury */}
-      <svg className="hidden absolute" width="0" height="0" aria-hidden="true">
-        <defs>
-          <filter id="ultra-liquid-goo" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="
-                1 0 0 0 0
-                0 1 0 0 0
-                0 0 1 0 0
-                0 0 0 24 -9
-              "
-              result="goo"
-            />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Floating Seamless Dynamic Island Navigation Pill (No White Borders) */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-40 w-full max-w-[340px] px-3 pointer-events-auto">
-        <div className="w-full relative rounded-full ios-crystal-liquid-glass p-1.5 flex items-center justify-between overflow-hidden">
+      {/* Floating Bottom Navigation Bar with Perfectly Symmetrical Cutout Notch */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 w-full max-w-[320px] px-2 pointer-events-auto">
+        <div className="w-full relative h-[56px]">
           
-          {/* Liquid Goo Filter Container */}
-          <div
-            className="absolute inset-0 p-1.5 pointer-events-none"
-            style={{ filter: "url('#ultra-liquid-goo')" }}
-          >
-            {/* Morphing Liquid Active Blob */}
-            <div
-              className={`h-full rounded-full bg-[#1C1917] dark:bg-white will-change-transform transition-all duration-350 ${
-                isStretching
-                  ? direction === 'right'
-                    ? 'scale-x-[1.4] -skew-x-6'
-                    : 'scale-x-[1.4] skew-x-6'
-                  : 'scale-100 skew-x-0'
-              }`}
-              style={{
-                width: '25%',
-                transform: `translateX(${activeIndex * 100}%)`,
-                transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            />
+          {/* Background Card SVG with Pixel-Perfect Symmetrical Notch Cutout */}
+          <div className="absolute inset-0 z-0 pointer-events-none drop-shadow-xl">
+            <svg
+              viewBox="0 0 320 56"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full h-full text-[#E2DDD4]/95 dark:text-[#1A1918]/95 backdrop-blur-xl"
+            >
+              {/* Symmetrical Curved Cutout Notch Path centered at X=160 */}
+              <path
+                d="M 24,0 L 128,0 C 136,0 141,5 146,12 C 151,20 169,20 174,12 C 179,5 184,0 192,0 L 296,0 C 309,0 320,11 320,24 L 320,32 C 320,45 309,56 296,56 L 24,56 C 11,56 0,45 0,32 L 0,24 C 0,11 11,0 24,0 Z"
+                fill="currentColor"
+                stroke="rgba(0,0,0,0.08)"
+                strokeWidth="1"
+              />
+            </svg>
           </div>
 
-          {/* Interactive Navigation Items */}
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+          {/* Left Navigation Actions (Dashboard & Analytics) */}
+          <div className="absolute left-0 top-0 bottom-0 w-[128px] z-10 flex items-center justify-around pl-1">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex flex-col items-center justify-center transition-all touch-shrink ${
+                activeTab === 'dashboard'
+                  ? 'text-[#1C1917] dark:text-white font-extrabold'
+                  : 'text-[#78746D] dark:text-[#A8A29E] hover:text-[#1C1917]'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'bg-[#1C1917] text-white dark:bg-white dark:text-[#1C1917]' : ''}`}>
+                <LayoutDashboard className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-[9px] tracking-tight mt-0.5 font-extrabold">
+                Dashboard
+              </span>
+            </button>
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`relative z-10 flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-full transition-all duration-300 touch-shrink ${
-                  isActive
-                    ? 'text-white dark:text-[#1C1917] font-extrabold'
-                    : tab.isAdd
-                    ? 'text-[#DF4F38] hover:text-[#1C1917] font-extrabold'
-                    : 'text-[#57534E] dark:text-[#A8A29E] hover:text-[#1C1917] font-bold'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 transition-all duration-300 ${
-                    isActive
-                      ? 'stroke-[2.5] scale-110 -translate-y-0.5 text-white dark:text-[#1C1917]'
-                      : tab.isAdd
-                      ? 'stroke-[3]'
-                      : 'stroke-[2.5]'
-                  }`}
-                />
-                <span className={`text-[10px] tracking-tight mt-0.5 whitespace-nowrap transition-all duration-300 ${
-                  isActive ? 'text-white dark:text-[#1C1917] font-extrabold' : 'text-[#57534E] dark:text-[#A8A29E] font-bold'
-                }`}>
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex flex-col items-center justify-center transition-all touch-shrink ${
+                activeTab === 'analytics'
+                  ? 'text-[#1C1917] dark:text-white font-extrabold'
+                  : 'text-[#78746D] dark:text-[#A8A29E] hover:text-[#1C1917]'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${activeTab === 'analytics' ? 'bg-[#1C1917] text-white dark:bg-white dark:text-[#1C1917]' : ''}`}>
+                <PieChart className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-[9px] tracking-tight mt-0.5 font-extrabold">
+                Analytics
+              </span>
+            </button>
+          </div>
+
+          {/* Center Floating AI Mic Button Dead-Center in the Notch */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-3.5 z-20 flex flex-col items-center justify-center">
+            <button
+              onClick={() => setIsVoiceModalOpen(true)}
+              title="Groq AI Voice Assistant"
+              className="w-[44px] h-[44px] rounded-full bg-[#DF4F38] text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all border border-white/40 dark:border-black/40"
+            >
+              <AIVoiceIcon className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Right Navigation Actions (Add & Settings) */}
+          <div className="absolute right-0 top-0 bottom-0 w-[128px] z-10 flex items-center justify-around pr-1">
+            <button
+              onClick={() => setActiveTab('add')}
+              className={`flex flex-col items-center justify-center transition-all touch-shrink ${
+                activeTab === 'add'
+                  ? 'text-[#1C1917] dark:text-white font-extrabold'
+                  : 'text-[#78746D] dark:text-[#A8A29E] hover:text-[#1C1917]'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${activeTab === 'add' ? 'bg-[#1C1917] text-white dark:bg-white dark:text-[#1C1917]' : ''}`}>
+                <Plus className="w-4 h-4 stroke-[3]" />
+              </div>
+              <span className="text-[9px] tracking-tight mt-0.5 font-extrabold">
+                Add
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex flex-col items-center justify-center transition-all touch-shrink ${
+                activeTab === 'settings'
+                  ? 'text-[#1C1917] dark:text-white font-extrabold'
+                  : 'text-[#78746D] dark:text-[#A8A29E] hover:text-[#1C1917]'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-[#1C1917] text-white dark:bg-white dark:text-[#1C1917]' : ''}`}>
+                <Settings className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-[9px] tracking-tight mt-0.5 font-extrabold">
+                Settings
+              </span>
+            </button>
+          </div>
 
         </div>
       </div>
+
+      {/* Groq AI Voice Assistant Modal */}
+      <AIVoiceModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+      />
     </>
   );
 }

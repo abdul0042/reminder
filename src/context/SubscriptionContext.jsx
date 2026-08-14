@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { auth, loginWithGoogle, logoutUser } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { CURRENCIES } from '../data/presets';
+import { playAlarmSound } from '../utils/playAlarmSound';
 
 const SubscriptionContext = createContext();
 
@@ -24,6 +25,34 @@ export function SubscriptionProvider({ children }) {
     return typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted';
   });
 
+  // Active Timers & Subscription Snooze Alarms State
+  const [activeReminders, setActiveReminders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('unsub_active_reminders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // General Quick Reminders & Tasks State
+  const [generalReminders, setGeneralReminders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('unsub_general_reminders');
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 'gen_1',
+          title: 'Get signature from manager',
+          dueTime: 'Today at 5:00 PM',
+          completed: false,
+          createdAt: new Date().toISOString()
+        }
+      ];
+    } catch (e) {
+      return [];
+    }
+  });
+
   // PWA Installation state
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isPWAInstalled, setIsPWAInstalled] = useState(false);
@@ -38,6 +67,7 @@ export function SubscriptionProvider({ children }) {
   // UI & Modals State
   const [selectedSub, setSelectedSub] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isGeneralReminderModalOpen, setIsGeneralReminderModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // Default Currency strictly INR (Rupees ₹)
@@ -71,6 +101,119 @@ export function SubscriptionProvider({ children }) {
     setDarkMode(prev => !prev);
   };
 
+  // Sync activeReminders and generalReminders to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('unsub_active_reminders', JSON.stringify(activeReminders));
+    } catch (e) {}
+  }, [activeReminders]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('unsub_general_reminders', JSON.stringify(generalReminders));
+    } catch (e) {}
+  }, [generalReminders]);
+
+  // Trigger Notification + Sound + Vibration
+  const triggerAlarmAlert = useCallback((titleText, note = '') => {
+    playAlarmSound();
+
+    if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {
+      navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+
+    const title = `⏰ UnSub Reminder: ${titleText}`;
+    const options = {
+      body: note || `Reminder alert: ${titleText}`,
+      icon: '/logo.png',
+      badge: '/logo.png',
+      tag: `unsub_general_${Date.now()}`,
+      vibrate: [300, 100, 300]
+    };
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options));
+      } else {
+        new Notification(title, options);
+      }
+    }
+
+    showToast(`⏰ REMINDER: ${titleText}`, 'info');
+  }, [showToast]);
+
+  // Add General Task / Reminder
+  const addGeneralReminder = (title, minutes = 5, note = '') => {
+    const durationMs = (minutes || 5) * 60 * 1000;
+    const fireAt = Date.now() + durationMs;
+
+    const newGen = {
+      id: `gen_${Date.now()}`,
+      title,
+      note,
+      minutes,
+      fireAt,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+
+    setGeneralReminders(prev => [newGen, ...prev]);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    setTimeout(() => {
+      triggerAlarmAlert(title, note);
+    }, durationMs);
+
+    showToast(`Added reminder: "${title}"`, 'success');
+  };
+
+  const toggleGeneralReminderComplete = (id) => {
+    setGeneralReminders(prev => prev.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ));
+  };
+
+  const deleteGeneralReminder = (id) => {
+    setGeneralReminders(prev => prev.filter(item => item.id !== id));
+    showToast('Deleted reminder', 'info');
+  };
+
+  // Schedule Quick Subscription Timer Reminder (e.g., 5 mins, 15 mins, 60 mins)
+  const scheduleReminder = (serviceName, minutes) => {
+    const durationMs = minutes * 60 * 1000;
+    const fireAt = Date.now() + durationMs;
+
+    const newReminder = {
+      id: `rem_${Date.now()}`,
+      serviceName,
+      minutes,
+      fireAt,
+      createdAt: new Date().toISOString()
+    };
+
+    setActiveReminders(prev => [...prev, newReminder]);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    setTimeout(() => {
+      triggerAlarmAlert(`Check ${serviceName}`);
+      setActiveReminders(prev => prev.filter(r => r.id !== newReminder.id));
+    }, durationMs);
+
+    showToast(`Set ${minutes}-minute alarm for ${serviceName}! ⏰`, 'success');
+  };
+
+  // Cancel an active timer
+  const cancelReminder = (id) => {
+    setActiveReminders(prev => prev.filter(r => r.id !== id));
+    showToast('Cancelled reminder alarm', 'info');
+  };
+
   // Request Device Notification Permission
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
@@ -99,27 +242,27 @@ export function SubscriptionProvider({ children }) {
 
   // Send Test Push Notification
   const sendTestNotification = () => {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      showToast('Please enable notifications first', 'error');
-      return;
+    playAlarmSound();
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const title = 'UnSub Alert Active 🔔';
+      const options = {
+        body: 'Notifications and sound chime are live! You will be alerted before any subscription renews.',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        vibrate: [200, 100, 200]
+      };
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, options);
+        });
+      } else {
+        new Notification(title, options);
+      }
     }
 
-    const title = 'UnSub Alert Active 🔔';
-    const options = {
-      body: 'Notifications are live! You will be alerted before your subscriptions renew.',
-      icon: '/logo.png',
-      badge: '/logo.png',
-      vibrate: [200, 100, 200]
-    };
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(title, options);
-      });
-    } else {
-      new Notification(title, options);
-    }
-    showToast('Sent test notification to your device!', 'success');
+    showToast('Sent test notification & alarm sound to your device!', 'success');
   };
 
   // Dispatch Renewal Notification Alert
@@ -256,7 +399,7 @@ export function SubscriptionProvider({ children }) {
     fetchAnalytics();
   }, [fetchSubscriptions, fetchAnalytics]);
 
-  // CRUD Actions
+  // CRUD Actions for Subscriptions
   const addSubscription = async (subData) => {
     try {
       const payload = { ...subData, currency: 'INR', userId: user?.uid || 'default_user' };
@@ -391,6 +534,8 @@ export function SubscriptionProvider({ children }) {
         setSelectedSub,
         isAddModalOpen,
         setIsAddModalOpen,
+        isGeneralReminderModalOpen,
+        setIsGeneralReminderModalOpen,
         activeTab,
         setActiveTab,
         darkMode,
@@ -405,6 +550,13 @@ export function SubscriptionProvider({ children }) {
         notificationsEnabled,
         requestNotificationPermission,
         sendTestNotification,
+        activeReminders,
+        scheduleReminder,
+        cancelReminder,
+        generalReminders,
+        addGeneralReminder,
+        toggleGeneralReminderComplete,
+        deleteGeneralReminder,
         toast,
         showToast,
         refreshData: () => { fetchSubscriptions(); fetchAnalytics(); }

@@ -3,6 +3,8 @@ import { SubscriptionProvider, useSubscriptions } from './context/SubscriptionCo
 import Header from './components/Header';
 import BalanceCard from './components/BalanceCard';
 import UpcomingSlider from './components/UpcomingSlider';
+import ActiveRemindersBanner from './components/ActiveRemindersBanner';
+import GeneralRemindersSection from './components/GeneralRemindersSection';
 import SubscriptionItem from './components/SubscriptionItem';
 import SubscriptionDetailModal from './components/SubscriptionDetailModal';
 import AddSubscriptionForm from './components/AddSubscriptionForm';
@@ -23,7 +25,6 @@ function DashboardContent() {
     loading,
     activeTab,
     setIsAddModalOpen,
-    darkMode
   } = useSubscriptions();
 
   const [splashFinished, setSplashFinished] = useState(false);
@@ -88,8 +89,10 @@ function DashboardContent() {
             <SettingsView />
           ) : (
             <>
+              <ActiveRemindersBanner />
               <BalanceCard />
               <UpcomingSlider />
+              <GeneralRemindersSection />
 
               <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">

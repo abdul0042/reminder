@@ -10,35 +10,35 @@ function UpcomingCard({ item }) {
   return (
     <div
       onClick={() => setSelectedSub(item)}
-      className="p-4 rounded-[22px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 text-[#1C1917] dark:text-[#F5F5F3] flex flex-col justify-between h-[115px] cursor-pointer hover:bg-[#D5CFC5] dark:hover:bg-[#2C2A26] transition-all touch-shrink"
+      className="w-[138px] flex-shrink-0 p-3 rounded-[20px] bg-[#E2DDD4] dark:bg-[#24221E] border border-black/5 dark:border-white/5 text-[#1C1917] dark:text-[#F5F5F3] flex flex-col justify-between h-[98px] cursor-pointer hover:bg-[#D5CFC5] dark:hover:bg-[#2C2A26] transition-all touch-shrink shadow-soft-sm"
     >
-      {/* Top Row: Real Brand Logo & Price */}
-      <div className="flex items-start justify-between">
-        <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1A1918] p-1 flex items-center justify-center font-black text-xs shadow-sm border border-black/10 dark:border-white/10 overflow-hidden">
+      {/* Top Row: Real Black Brand Logo & Price */}
+      <div className="flex items-center justify-between">
+        <div className="w-7 h-7 rounded-xl bg-white/90 dark:bg-white/90 p-1 flex items-center justify-center font-black text-xs shadow-sm border border-black/10 overflow-hidden flex-shrink-0">
           {logoUrl && !logoError ? (
             <img
               src={logoUrl}
               alt={item.serviceName}
               onError={() => setLogoError(true)}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain grayscale contrast-200"
             />
           ) : (
-            <span className="font-extrabold text-xs text-[#1C1917] dark:text-[#F5F5F3]">
+            <span className="font-extrabold text-xs text-[#1C1917]">
               {(item.serviceName || 'S').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
-        <span className="font-extrabold text-sm">
+        <span className="font-extrabold text-sm truncate ml-1">
           {formatPrice(item.price)}
         </span>
       </div>
 
       {/* Bottom Row: Name & Days Left */}
-      <div className="flex items-end justify-between gap-1">
-        <span className="font-bold text-xs truncate max-w-[90px]">
+      <div className="space-y-0.5 min-w-0">
+        <span className="font-bold text-xs truncate block">
           {item.serviceName}
         </span>
-        <span className="text-[10px] font-semibold text-[#78746D] dark:text-[#A8A29E] whitespace-nowrap">
+        <span className="text-[10px] font-semibold text-[#78746D] dark:text-[#A8A29E] block">
           {item.daysLeft <= 0 ? 'Due Today' : `${item.daysLeft} days left`}
         </span>
       </div>
@@ -65,15 +65,14 @@ export default function UpcomingSlider() {
       ...s,
       daysLeft: getDaysLeft(s.nextBillingDate)
     }))
-    .sort((a, b) => a.daysLeft - b.daysLeft)
-    .slice(0, 4);
+    .sort((a, b) => a.daysLeft - b.daysLeft);
 
   if (upcomingItems.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {/* Section Heading */}
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-[#1C1917] dark:text-[#F5F5F3] tracking-tight">
@@ -88,8 +87,8 @@ export default function UpcomingSlider() {
         </button>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Horizontal Scrollable Row */}
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2.5 -mx-5 px-5 py-1">
         {upcomingItems.map((item) => (
           <UpcomingCard key={item.id} item={item} />
         ))}

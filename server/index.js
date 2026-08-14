@@ -20,8 +20,6 @@ const rootDir = process.cwd();
 const distPath = join(rootDir, 'dist');
 const publicPath = join(rootDir, 'public');
 
-console.log('Serving static files from:', distPath);
-
 if (existsSync(distPath)) {
   app.use(express.static(distPath));
 }
@@ -45,7 +43,7 @@ try {
       type: "service_account",
       project_id: "reminder-94d10",
       private_key_id: "633ef42dfbccb0b850b0b8ceca80a23e82f4c4db",
-      private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDGJLGdBLyRITBN\nxNxDdFY4Vcjv9UH7XDJ4cJdK/e71b1KedvSwK1RDLBg9PSN19HwIvFmnzcUAajGW\nImR104jYDJ8pKNS0LlD2qZWZ4aIirmp3j0geXt3MqT9KCKnQTHjJe0Tac/YNzRP2\n0K11/8UOYdMSymj3E445bPPJJyQrwo8q0sT1imNYVpvuaRXmf+cq5xrTQ8Q1bsd7\nPRupZ/gg/xDQ2VkBCWmvnQK432DceZt+G2hTbnFqENr4uJBkI84eambGAflBHI8T\nKXOdDzbr5inOBzMQl/pVeR7vG1nJj+8bj8l7qPQaLlop/sm5iNZAU5rI4JyrtnNI\n/aPDgiWFAgMBAAECggEABzqZfEgK9SSH1Z6EBrX820tN7Gs/QANqF/jLnEHNcQjh\ns8RVQwQhq920+K79VzVXPR5aCwQ31r8JFhglICNaj79OIztJH1W9QHKJcbbIqolA\neyIwGGOPpgLau0G7qEzR70/fADVQ2coMm2mbmn19W/v3rmzSDYmaG8A82K7j4/DB\nxS5VO+uIvM18MjtsIVDYHyiA+OQCvW1cUIZ9qmw1dghFt9rkOvXx6twphfcNzNGM\nQf/ftSk73/Hpko8o53uRFmvrxdBIfahbs4r/+oS3qz+ajOEW7yyrRODxB4kLi/ST\n3GvlaNkixD9OI5L65Yqce1bblwMUSzVy6oyMJ0KS4QKBgQDojGOOxJmV0kSR0WX2\nQxpP7hy9PaXqyYGpY+NbN5J0sGm/NVpqOVBsR+8dqo2KFy/Kr2gc9UkSNb/J0Lj3\nxyMkZ5BlSzeMRcSQxmERnKbh8TgPD9lr3EmvaAfto2CDUx3QqT/D7PgFbc/WKaJG\nLrP6Pv/cfrX6xlGYGHq3ZjJTWQKBgQDaIBU64AWcV+Z2fyCit74W3MpaAkrpOIXT\nDHNSEQ7OrtGEjudQqAL8rShyX075JzftVgU7n//JgQARbUzZiO4vqGV+q7cDhqfT\n6VkwsdogF1hdSZ7BSYw818q2HcojxA6QsDlXYoVKLPNMjZJRl7t7U/KIcsfh/8Ki\ncY8pMyf6DQKBgCjI5nUVmfIizI/eb8l+/1BhbHzsIPtKmAkDUc6fsnnwrrswOklD\nAA3dl9xWGzjK1EDx/oqFomklMBvPFYGvVUR/PV3mkTlyywSxJjkWhlY+HhzWJMW7\n/thaoHlXHAgsPaBo7pwIJX+eQMNIzgMNEdej0O/08SmoOos4T912eQERAoGAAysk\nI87NRhAg0OfX2YVBxaM/bT9LR0gC6aXspuyIgogXkw1gXtOR94msZLztsMDZFyGA\nwfT5CjxNe/NSgnZyv0566vQjnHGATpu9J+/tcznjlrdTDwu6dcfMsgiMvyhB7egh\nbRuJRCKTBjGoRnclygzWIRVJwgatFR8BLWAI3KECgYBYHMcZheOor2t2finD4Vly\n6jz4kLw2Z0OmMXTBrfkEkdvFXtbmU819pa9o8xhfv4AEtweNzvfcpeb8o1rmADzD\nqQFD0dfhZhvDeDaQ6Q5YRwDlxI9/5/XOMNHHO+90duXtOeGdZTyBfkPgTJSskwAU\n0pDr5sD8jTYAHbYNbEUt5g==\n-----END PRIVATE KEY-----\n",
+      private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDGJLGdBLyRITBN\nxNxDdFY4Vcjv9UH7XDJ4cJdK/e71b1KedvSwK1RDLBg9PSN19HwIvFmnzcUAajGW\nImR104jYDJ8pKNS0LlD2qZWZ4aIirmp3j0geXt3MqT9KCKnQTHjJe0Tac/YNzRP2\n0K11/8UOYdMSymj3E445bPPJJyQrwo8q0sT1imNYVpvuaRXmf+cq5xrTQ8Q1bsd7\nPRupZ/gg/xDQ2VkBCWmvnQK432DceZt+G2hTbnFqENr4uJBkI84eambGAflBHI8T\nKXOdDzbr5inOBzMQl/pVeR7vG1nJj+8bj8l7qPQaLlop/sm5iNZAU5rI4JyrtnNI\n/aPDgiWFAgMBAAECggEABzqZfEgK9SSH1Z6EBrX820tN7Gs/QANqF/jLnEHNcQjh\ns8RVQwQhq920+K79VzVXPR5aCwQ31r8JFhglICNaj79OIztJH1W9QHKJcbbIqolA\neyIwGGOPpgLau0G7qEzR70/fADVQ2coMm2mbmn19W/v3rmzSDYmaG8A82K7j4/DB\nxS5VO+uIvM18MjtsIVDYHyiA+OQCvW1cUIZ9qmw1dghFt9rkOvXx6twphfcNzNGM\nQf/ftSk73/Hpko8o53uRFmvrxdBIfahbs4r/+oS3qz+ajOEW7yyrRODxB4kLi/ST\n3GvlaNkixD9OI5L65Yqce1bblwMUSzVy6oyMJ0KS4QKBgQDojGOOxJmV0kSR0WX2\nQxpP7hy9PaXqyYGpY+NbN5J0sGm/NVpqOVBsR+8dqo2KFy/Kr2gc9UkSNb/J0Lj3\nxyMkZ5BlSzeMRcSQxmERnKbh8TgPD9lr3EmvaAfto2CDUx3QqT/D7PgFbc/WKaJG\nLrP6Pv/cfrX6xlGYGHq3ZjJTWQKBgQDaIBU64AWcV+Z2fyCit74W3MpaAkrpOIXT\nDHNSEQ7OrtGEjudQqAL8rShyX075JzftVgU7n//JgQARbUzZiO4vqGV+q7cDhqfT\n6VkwsdogF1hdSZ7BSYw818q2HcojxA6QsDlXYoVKLPNMjZJRl7t7U/KIcsfh/8Ki\ncY8pMyf6DQKBgCjI5nUVmfIizI/eb8l+/1BhbHzsIPtKmAkDUc6fsnnwrrswOklD\AA3dl9xWGzjK1EDx/oqFomklMBvPFYGvVUR/PV3mkTlyywSxJjkWhlY+HhzWJMW7\n/thaoHlXHAgsPaBo7pwIJX+eQMNIzgMNEdej0O/08SmoOos4T912eQERAoGAAysk\nI87NRhAg0OfX2YVBxaM/bT9LR0gC6aXspuyIgogXkw1gXtOR94msZLztsMDZFyGA\nwfT5CjxNe/NSgnZyv0566vQjnHGATpu9J+/tcznjlrdTDwu6dcfMsgiMvyhB7egh\nbRuJRCKTBjGoRnclygzWIRVJwgatFR8BLWAI3KECgYBYHMcZheOor2t2finD4Vly\n6jz4kLw2Z0OmMXTBrfkEkdvFXtbmU819pa9o8xhfv4AEtweNzvfcpeb8o1rmADzD\nqQFD0dfhZhvDeDaQ6Q5YRwDlxI9/5/XOMNHHO+90duXtOeGdZTyBfkPgTJSskwAU\n0pDr5sD8jTYAHbYNbEUt5g==\n-----END PRIVATE KEY-----\n",
       client_email: "firebase-adminsdk-fbsvc@reminder-94d10.iam.gserviceaccount.com"
     };
   }
@@ -106,8 +104,146 @@ app.get('/', (req, res) => {
     database: db ? 'Firebase Firestore (reminder-94d10)' : 'Memory Fallback',
     endpoints: [
       '/api/subscriptions',
-      '/api/analytics/monthly-total'
+      '/api/analytics/monthly-total',
+      '/api/ai/parse-voice'
     ]
+  });
+});
+
+// AI VOICE COMMAND PARSER (Groq API + Smart Fallback for both Subscriptions & General Tasks)
+app.post('/api/ai/parse-voice', async (req, res) => {
+  const { transcript, apiKey } = req.body;
+
+  if (!transcript) {
+    return res.status(400).json({ success: false, error: 'Transcript is required' });
+  }
+
+  const groqKey = process.env.GROQ_API_KEY || apiKey;
+
+  if (groqKey) {
+    try {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: `You are UnSub AI Voice Parser. Detect if the user wants to add a subscription OR set a general reminder/task.
+Output ONLY JSON matching one of these two formats:
+
+For Subscriptions:
+{
+  "type": "subscription",
+  "action": "add_subscription",
+  "serviceName": "Name of service",
+  "price": 100,
+  "billingCycle": "monthly" | "yearly" | "quarterly" | "weekly",
+  "days": 30,
+  "category": "Entertainment" | "Music" | "Productivity" | "AI & Tech",
+  "planType": "Standard"
+}
+
+For General Reminders/Tasks (e.g. "remind me to get a signature", "buy groceries"):
+{
+  "type": "general_reminder",
+  "action": "add_general_reminder",
+  "title": "Title of reminder",
+  "minutes": 15,
+  "note": ""
+}`
+            },
+            {
+              role: 'user',
+              content: transcript
+            }
+          ],
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (groqRes.ok) {
+        const groqData = await groqRes.json();
+        const content = groqData.choices?.[0]?.message?.content;
+        if (content) {
+          const parsed = JSON.parse(content);
+          return res.json({ success: true, data: parsed, engine: 'groq' });
+        }
+      }
+    } catch (err) {
+      console.warn('Groq API error, falling back to smart regex:', err.message);
+    }
+  }
+
+  // Fallback Smart Parser
+  const tLower = transcript.toLowerCase();
+
+  // Detect general task intent if phrase starts with "remind me to" or has no price
+  const isGeneral = tLower.includes('remind me to') || tLower.includes('signature') || tLower.includes('buy') || tLower.includes('task') || (!tLower.includes('bill') && !tLower.includes('rupees') && !tLower.includes('₹') && !tLower.includes('price'));
+
+  if (isGeneral) {
+    const cleanTitle = transcript
+      .replace(/^remind me to/i, '')
+      .replace(/^remind me/i, '')
+      .trim();
+
+    return res.json({
+      success: true,
+      engine: 'regex_fallback',
+      data: {
+        type: 'general_reminder',
+        action: 'add_general_reminder',
+        title: cleanTitle ? (cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)) : transcript,
+        minutes: 15,
+        note: 'Added via Voice Assistant'
+      }
+    });
+  }
+
+  // Otherwise Subscription fallback
+  const priceMatch = tLower.match(/(?:value|price|cost|is|for|of)?\s*(?:₹|\$|rs\.?|rupees)?\s*(\d+(?:\.\d+)?)/);
+  const price = priceMatch ? parseFloat(priceMatch[1]) : 100;
+
+  let serviceName = 'Subscription';
+  const knownServices = ['spotify', 'netflix', 'youtube', 'chatgpt', 'amazon', 'adobe', 'apple', 'jio', 'airtel', 'vi', 'figma', 'github', 'hotstar', 'disney'];
+  for (const s of knownServices) {
+    if (tLower.includes(s)) {
+      serviceName = s.charAt(0).toUpperCase() + s.slice(1);
+      break;
+    }
+  }
+
+  let days = 30;
+  const daysMatch = tLower.match(/(\d+)\s*(?:days|day)/);
+  if (daysMatch) {
+    days = parseInt(daysMatch[1], 10);
+  }
+
+  let billingCycle = 'monthly';
+  if (tLower.includes('year') || days > 180) billingCycle = 'yearly';
+  else if (tLower.includes('week') || days <= 7) billingCycle = 'weekly';
+
+  const nextDate = new Date();
+  nextDate.setDate(nextDate.getDate() + days);
+
+  return res.json({
+    success: true,
+    engine: 'regex_fallback',
+    data: {
+      type: 'subscription',
+      action: 'add_subscription',
+      serviceName,
+      price,
+      billingCycle,
+      days,
+      nextBillingDate: nextDate.toISOString().split('T')[0],
+      category: serviceName.toLowerCase().includes('spotify') ? 'Music' : 'Entertainment',
+      planType: 'Standard'
+    }
   });
 });
 
@@ -140,7 +276,7 @@ app.get('/api/subscriptions', async (req, res) => {
 
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(sub =>
+      result = result.filter(sub => 
         sub.serviceName?.toLowerCase().includes(q) ||
         sub.planType?.toLowerCase().includes(q) ||
         sub.category?.toLowerCase().includes(q)
@@ -187,7 +323,7 @@ app.get('/api/analytics/monthly-total', async (req, res) => {
     }
 
     const activeSubs = allSubs.filter(sub => sub.status === 'active');
-
+    
     let totalMonthlySpend = 0;
     const categoryBreakdown = {};
 
@@ -348,7 +484,8 @@ app.get('*', (req, res) => {
     database: db ? 'Firebase Firestore (reminder-94d10)' : 'Memory Fallback',
     endpoints: [
       '/api/subscriptions',
-      '/api/analytics/monthly-total'
+      '/api/analytics/monthly-total',
+      '/api/ai/parse-voice'
     ]
   });
 });

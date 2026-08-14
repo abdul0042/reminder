@@ -37,18 +37,18 @@ export default function SubscriptionItem({ item }) {
       className="p-4 rounded-[24px] flex items-center justify-between cursor-pointer hover:opacity-95 transition-all touch-shrink shadow-soft-sm"
       style={{ backgroundColor: style.bg, color: style.text }}
     >
-      {/* Left: Real Brand Logo + Title + Real Date */}
+      {/* Left: Real Black Brand Logo + Title + Real Date */}
       <div className="flex items-center gap-3.5 min-w-0">
-        <div className="w-11 h-11 rounded-2xl bg-white dark:bg-[#1A1918] p-2 flex items-center justify-center flex-shrink-0 shadow-sm border border-black/10 dark:border-white/10 overflow-hidden">
+        <div className="w-11 h-11 rounded-2xl bg-white/80 dark:bg-white/90 p-2 flex items-center justify-center flex-shrink-0 shadow-sm border border-black/10 overflow-hidden">
           {logoUrl && !logoError ? (
             <img
               src={logoUrl}
               alt={item.serviceName}
               onError={() => setLogoError(true)}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain grayscale contrast-200"
             />
           ) : (
-            <span className="font-extrabold text-base text-[#1C1917] dark:text-[#F5F5F3]">
+            <span className="font-extrabold text-base text-[#1C1917]">
               {(item.serviceName || 'S').charAt(0).toUpperCase()}
             </span>
           )}

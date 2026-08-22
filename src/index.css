@@ -16,6 +16,11 @@
   }
 }
 
+/* Safe area top padding for mobile status bar, notification tray, and notches */
+.safe-area-header {
+  padding-top: max(1.75rem, calc(0.75rem + env(safe-area-inset-top)));
+}
+
 /* Hide scrollbars for clean horizontal slider */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

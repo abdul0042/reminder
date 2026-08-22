@@ -5,7 +5,6 @@ import { Plus, LogOut, LogIn, ShieldCheck, X, Bell, CheckCircle2, Circle, Trash2
 export default function Header() {
   const {
     user,
-    handleGoogleLogin,
     handleLogout,
     setIsAddModalOpen,
     generalReminders,
@@ -21,7 +20,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full px-5 py-4 flex items-center justify-between bg-[#EBE6DD] dark:bg-[#121212] transition-colors">
+      <header className="w-full px-5 safe-area-header pb-3 flex items-center justify-between bg-[#EBE6DD] dark:bg-[#121212] transition-colors">
         
         {/* Left: User Profile Avatar & Name */}
         <div className="flex items-center gap-3">
@@ -86,13 +85,12 @@ export default function Header() {
               <Plus className="w-5 h-5 stroke-[2.5]" />
             </button>
           ) : (
-            <button
-              onClick={handleGoogleLogin}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] text-xs font-extrabold shadow-sm transition-all touch-shrink"
+            <div
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1C1917] dark:bg-white text-white dark:text-[#1C1917] text-xs font-extrabold shadow-sm"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In</span>
-            </button>
+            </div>
           )}
         </div>
       </header>

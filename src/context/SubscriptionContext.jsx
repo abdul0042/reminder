@@ -1,8 +1,32 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { auth, loginWithGoogle, logoutUser } from '../firebase';
+import { auth, signUpWithEmail, loginWithEmail, logoutUser } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { CURRENCIES } from '../data/presets';
 import { playAlarmSound } from '../utils/playAlarmSound';
+
+const scheduleNativeBackgroundAlarm = async (idNum, title, body, fireAtDate) => {
+  try {
+    const perm = await LocalNotifications.requestPermissions();
+    if (perm.display === 'granted') {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: `⏰ UnSub Alarm: ${title}`,
+            body: body || `Reminder alert for ${title}`,
+            id: Math.abs(idNum) % 2147483647,
+            schedule: { at: new Date(fireAtDate), allowWhileIdle: true },
+            sound: 'alarm.wav',
+            actionTypeId: '',
+            extra: null
+          }
+        ]
+      });
+    }
+  } catch (err) {
+    console.warn('Native LocalNotification schedule skipped or failed:', err);
+  }
+};
 
 const SubscriptionContext = createContext();
 
@@ -161,6 +185,9 @@ export function SubscriptionProvider({ children }) {
 
     setGeneralReminders(prev => [newGen, ...prev]);
 
+    // Schedule native Android OS background alarm (triggers even if app is closed)
+    scheduleNativeBackgroundAlarm(Date.now(), title, note, fireAt);
+
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
@@ -201,6 +228,9 @@ export function SubscriptionProvider({ children }) {
     };
 
     setActiveReminders(prev => [...prev, newReminder]);
+
+    // Schedule native Android OS background alarm
+    scheduleNativeBackgroundAlarm(Date.now(), `Check ${serviceName}`, `Subscription reminder for ${serviceName}`, fireAt);
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -497,12 +527,23 @@ export function SubscriptionProvider({ children }) {
     return `${activeCurrencyObj.symbol}${formatted}`;
   };
 
-  const handleGoogleLogin = async () => {
+  const handleEmailSignUp = async (email, password, displayName) => {
     try {
-      await loginWithGoogle();
-      showToast('Successfully signed in with Google!', 'success');
+      await signUpWithEmail(email, password, displayName);
+      showToast('Account created successfully!', 'success');
     } catch (err) {
-      showToast('Google Sign-In: ' + (err.message || 'Cancelled'), 'error');
+      showToast(err.message || 'Failed to create account', 'error');
+      throw err;
+    }
+  };
+
+  const handleEmailLogin = async (email, password) => {
+    try {
+      await loginWithEmail(email, password);
+      showToast('Signed in successfully!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to sign in', 'error');
+      throw err;
     }
   };
 
@@ -517,7 +558,8 @@ export function SubscriptionProvider({ children }) {
       value={{
         user,
         authLoading,
-        handleGoogleLogin,
+        handleEmailSignUp,
+        handleEmailLogin,
         handleLogout,
         installPWA,
         canInstallPWA: !!deferredPrompt,

@@ -13,6 +13,7 @@ import AuthCard from './components/AuthCard';
 import SettingsView from './components/SettingsView';
 import LiquidTabBar from './components/LiquidTabBar';
 import PWAGuideModal from './components/PWAGuideModal';
+import UpdateModal from './components/UpdateModal';
 import SplashLoader from './components/SplashLoader';
 import Toast from './components/Toast';
 import { CreditCard, Download } from 'lucide-react';
@@ -120,6 +121,7 @@ function DashboardContent() {
       <SubscriptionDetailModal />
       <AddSubscriptionForm isModal={true} />
       <PWAGuideModal />
+      <UpdateModal />
       <Toast />
     </div>
   );

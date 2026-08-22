@@ -60,33 +60,45 @@ export default function SettingsView() {
         </span>
       </div>
 
-      {/* 1. Prominent PWA Download / Install Section */}
+      {/* 1. Prominent Android APK & PWA Install Section */}
       <div className="p-5 rounded-[26px] bg-[#DF4F38] text-white shadow-terracotta space-y-3 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Smartphone className="w-5 h-5" />
             <h3 className="font-extrabold text-sm tracking-tight">
-              Install UnSub App
+              Get UnSub Mobile App
             </h3>
           </div>
           {isPWAInstalled && (
             <span className="flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-              <Check className="w-3 h-3" /> Installed
+              <Check className="w-3 h-3" /> PWA Installed
             </span>
           )}
         </div>
 
         <p className="text-xs text-white/90 font-medium leading-relaxed">
-          Add UnSub to your mobile home screen or desktop as a native app for fast, offline access.
+          Download the latest native Android APK directly or install UnSub to your mobile home screen.
         </p>
 
-        <button
-          onClick={installPWA}
-          className="w-full py-3.5 rounded-[18px] bg-white text-[#DF4F38] hover:bg-slate-50 font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all touch-shrink"
-        >
-          <Download className="w-4 h-4 stroke-[2.5]" />
-          <span>{isPWAInstalled ? 'App Ready on Device' : 'Download & Install UnSub App'}</span>
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <a
+            href="https://github.com/abdul0042/reminder/releases/latest/download/app-debug.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 rounded-[18px] bg-white text-[#DF4F38] hover:bg-slate-50 font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all touch-shrink"
+          >
+            <Download className="w-4 h-4 stroke-[2.5]" />
+            <span>Download APK (.apk)</span>
+          </a>
+
+          <button
+            onClick={installPWA}
+            className="w-full py-3 rounded-[18px] bg-black/20 hover:bg-black/30 border border-white/20 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all touch-shrink"
+          >
+            <Smartphone className="w-4 h-4 stroke-[2.5]" />
+            <span>{isPWAInstalled ? 'App Ready' : 'Install PWA'}</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Device Push Notifications Card */}

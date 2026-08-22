@@ -14,7 +14,7 @@ import LiquidTabBar from './components/LiquidTabBar';
 import PWAGuideModal from './components/PWAGuideModal';
 import SplashLoader from './components/SplashLoader';
 import Toast from './components/Toast';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Download } from 'lucide-react';
 
 function DashboardContent() {
   const {
@@ -80,6 +80,22 @@ function DashboardContent() {
                 </svg>
                 <span>Continue with Google</span>
               </button>
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
+                <span className="flex-shrink mx-3 text-[10px] uppercase font-extrabold text-[#78746D] dark:text-[#A8A29E]">OR</span>
+                <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
+              </div>
+
+              <a
+                href="https://github.com/abdul0042/reminder/releases/latest/download/app-debug.apk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 rounded-[20px] bg-[#DF4F38] text-white font-extrabold text-xs shadow-terracotta transition-all touch-shrink flex items-center justify-center gap-2 hover:opacity-95"
+              >
+                <Download className="w-4 h-4 stroke-[2.5]" />
+                <span>Download Android App (.apk)</span>
+              </a>
             </div>
           ) : activeTab === 'analytics' ? (
             <AnalyticsView />

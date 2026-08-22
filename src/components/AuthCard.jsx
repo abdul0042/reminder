@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { Mail, Lock, User, LogIn, UserPlus, Download } from 'lucide-react';
+import { Mail, Lock, User, LogIn, UserPlus, Download, Zap } from 'lucide-react';
 
 export default function AuthCard() {
-  const { handleEmailSignUp, handleEmailLogin } = useSubscriptions();
+  const { handleEmailSignUp, handleEmailLogin, handleGuestLogin } = useSubscriptions();
   const [isSignUp, setIsSignUp] = useState(false);
   
   const [name, setName] = useState('');
@@ -40,10 +40,14 @@ export default function AuthCard() {
       }
     } catch (err) {
       let msg = err.message || 'Authentication failed.';
-      if (msg.includes('auth/invalid-credential') || msg.includes('auth/user-not-found') || msg.includes('auth/wrong-password')) {
+      if (msg.includes('auth/operation-not-allowed')) {
+        msg = 'Email/Password authentication is disabled in Firebase Console. Please enable "Email/Password" in Firebase Console -> Authentication -> Sign-in method.';
+      } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/user-not-found') || msg.includes('auth/wrong-password')) {
         msg = 'Invalid email or password.';
       } else if (msg.includes('auth/email-already-in-use')) {
         msg = 'An account with this email already exists.';
+      } else if (msg.includes('auth/invalid-email')) {
+        msg = 'Please enter a valid email address.';
       }
       setFormError(msg);
     } finally {
@@ -180,6 +184,16 @@ export default function AuthCard() {
           )}
         </button>
       </form>
+
+      {/* Demo / Guest Instant Access */}
+      <button
+        type="button"
+        onClick={handleGuestLogin}
+        className="w-full py-3 rounded-[20px] bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-extrabold text-xs flex items-center justify-center gap-2 transition-all touch-shrink hover:bg-amber-500/20"
+      >
+        <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+        <span>Instant Demo Access (Skip Login)</span>
+      </button>
 
       {/* Divider */}
       <div className="relative flex py-1 items-center">

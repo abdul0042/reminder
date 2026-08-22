@@ -1,14 +1,30 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { auth, signUpWithEmail, loginWithEmail, logoutUser } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { CURRENCIES } from '../data/presets';
 import { playAlarmSound } from '../utils/playAlarmSound';
+
+const ensureAlarmChannel = async () => {
+  try {
+    await LocalNotifications.createChannel({
+      id: 'unsub_alarm_channel',
+      name: 'UnSub Loud Reminder Alarms',
+      description: 'Loud alarm notifications with sound and vibration for subscription renewals',
+      importance: 5, // MAX importance - pops up as banner on screen & rings sound
+      visibility: 1, // Public on lockscreen
+      vibration: true,
+      lights: true,
+      lightColor: '#DF4F38'
+    });
+  } catch (e) {
+    console.warn('Channel creation error:', e);
+  }
+};
 
 const scheduleNativeBackgroundAlarm = async (idNum, title, body, fireAtDate) => {
   try {
     const perm = await LocalNotifications.requestPermissions();
     if (perm.display === 'granted') {
+      await ensureAlarmChannel();
       await LocalNotifications.schedule({
         notifications: [
           {
@@ -16,6 +32,7 @@ const scheduleNativeBackgroundAlarm = async (idNum, title, body, fireAtDate) => 
             body: body || `Reminder alert for ${title}`,
             id: Math.abs(idNum) % 2147483647,
             schedule: { at: new Date(fireAtDate), allowWhileIdle: true },
+            channelId: 'unsub_alarm_channel',
             sound: 'alarm.wav',
             actionTypeId: '',
             extra: null
@@ -31,8 +48,24 @@ const scheduleNativeBackgroundAlarm = async (idNum, title, body, fireAtDate) => 
 const SubscriptionContext = createContext();
 
 export function SubscriptionProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  // Persistent Direct DB / Local User Auth State
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('unsub_db_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [authLoading, setAuthLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('unsub_db_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('unsub_db_user');
+    }
+  }, [user]);
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -528,28 +561,74 @@ export function SubscriptionProvider({ children }) {
   };
 
   const handleEmailSignUp = async (email, password, displayName) => {
+    if (!email || !password) throw new Error('Please enter an email and password.');
+    const cleanEmail = email.trim().toLowerCase();
+    const newUser = {
+      uid: 'user_' + Date.now(),
+      email: cleanEmail,
+      displayName: displayName || cleanEmail.split('@')[0],
+      createdAt: new Date().toISOString()
+    };
+    
     try {
-      await signUpWithEmail(email, password, displayName);
-      showToast('Account created successfully!', 'success');
-    } catch (err) {
-      showToast(err.message || 'Failed to create account', 'error');
-      throw err;
-    }
+      const existingUsers = JSON.parse(localStorage.getItem('unsub_registered_users') || '{}');
+      existingUsers[cleanEmail] = { ...newUser, password };
+      localStorage.setItem('unsub_registered_users', JSON.stringify(existingUsers));
+    } catch (e) {}
+
+    setUser(newUser);
+    showToast('Account created successfully!', 'success');
   };
 
   const handleEmailLogin = async (email, password) => {
+    if (!email || !password) throw new Error('Please enter an email and password.');
+    const cleanEmail = email.trim().toLowerCase();
+    
+    let existingUsers = {};
     try {
-      await loginWithEmail(email, password);
+      existingUsers = JSON.parse(localStorage.getItem('unsub_registered_users') || '{}');
+    } catch (e) {}
+
+    const match = existingUsers[cleanEmail];
+    if (match) {
+      if (match.password !== password) {
+        throw new Error('Incorrect password. Please try again.');
+      }
+      setUser({ uid: match.uid, email: match.email, displayName: match.displayName });
       showToast('Signed in successfully!', 'success');
-    } catch (err) {
-      showToast(err.message || 'Failed to sign in', 'error');
-      throw err;
+    } else {
+      // Auto-register and sign in user smoothly
+      const newUser = {
+        uid: 'user_' + Date.now(),
+        email: cleanEmail,
+        displayName: cleanEmail.split('@')[0],
+        createdAt: new Date().toISOString()
+      };
+      existingUsers[cleanEmail] = { ...newUser, password };
+      try {
+        localStorage.setItem('unsub_registered_users', JSON.stringify(existingUsers));
+      } catch (e) {}
+      setUser(newUser);
+      showToast('Signed in successfully!', 'success');
     }
   };
 
+  const handleGuestLogin = () => {
+    const guestUser = {
+      uid: 'guest_user_123',
+      email: 'user@unsub.app',
+      displayName: 'UnSub User',
+      photoURL: null
+    };
+    setUser(guestUser);
+    showToast('Signed in as Demo User!', 'success');
+  };
+
   const handleLogout = async () => {
-    await logoutUser();
     setUser(null);
+    try {
+      localStorage.removeItem('unsub_db_user');
+    } catch (e) {}
     showToast('Signed out', 'info');
   };
 
@@ -560,6 +639,7 @@ export function SubscriptionProvider({ children }) {
         authLoading,
         handleEmailSignUp,
         handleEmailLogin,
+        handleGuestLogin,
         handleLogout,
         installPWA,
         canInstallPWA: !!deferredPrompt,

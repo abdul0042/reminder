@@ -35,6 +35,7 @@ export default function SubscriptionItem({ item }) {
       style={{ backgroundColor: style.bg, color: style.text }}
     >
       {/* Left: Real Black Brand Logo + Title + Real Date */}
+      <div className="flex items-center space-x-3 min-w-0">
         <ServiceLogo name={item.serviceName} website={item.website} className="w-11 h-11 rounded-2xl bg-white/90 border-black/10 shadow-xs" textClassName="text-base" />
 
         <div className="min-w-0">
